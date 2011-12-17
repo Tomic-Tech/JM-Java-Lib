@@ -47,7 +47,7 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
         }
         if (needRecv) {
             if (!_box.turnOverOneByOne()
-                    || !_box.sendOutData(sendBuff)
+                    || !_box.sendOutData(0, sendBuff.length, sendBuff)
                     || !_box.updateBuff(D.INC_DATA, _buffIdAddr)
                     || !_box.turnOverOneByOne()
                     || !_box.runReceive(D.REC_FR)
@@ -69,7 +69,7 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
             }
         } else {
             if (!_box.turnOverOneByOne()
-                    || !_box.sendOutData(sendBuff)
+                    || !_box.sendOutData(0, sendBuff.length, sendBuff)
                     || !_box.updateBuff(D.INC_DATA, _buffIdAddr)
                     || !_box.turnOverOneByOne()
                     || !_box.runReceive(D.REC_FR)
@@ -81,22 +81,21 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
                 throw new IOException();
             }
         }
-        byte[] result = _box.readBytes(sendBuff.length - 1);
-        if (result == null) {
+        byte[] result = new byte[sendBuff.length - 1];
+        if (_box.readBytes(result, 0, sendBuff.length - 1) <= 0) {
             throw new IOException();
         }
     }
 
     public byte[] readOneFrame(boolean isFinish) throws IOException {
-        byte[] temp = _box.readBytes(1);
-        if (temp == null) {
+        byte[] temp = new byte[1];
+        if (_box.readBytes(temp, 0, 1) <= 0) {
             throw new IOException();
         }
         int length = temp[0] & 0xFF;
         byte[] buff = new byte[length + 1];
         System.arraycopy(buff, 0, temp, 0, 1);
-        temp = _box.readBytes(length);
-        if (temp == null) {
+        if (_box.readBytes(buff, 1, length) <= 0) {
             throw new IOException();
         }
         System.arraycopy(buff, 1, temp, 0, length);
@@ -154,7 +153,7 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
             throw new IOException();
         }
 
-        if (!_box.sendOutData(new byte[]{new Integer(addrCode).byteValue()})
+        if (!_box.sendOutData(0, 1, (byte)addrCode)
                 || !_box.setCommLine(_kLine == D.RK1 ? D.SK_NO : _lLine, _kLine)
                 || !_box.runReceive(D.SET55_BAUD)
                 || !_box.runReceive(D.REC_LEN_1)
@@ -174,8 +173,8 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
             throw new IOException();
         }
         
-        temp = _box.readData(2, 3500000);
-        if (temp == null) {
+        temp = new byte[2];
+        if (_box.readData(temp, 0, 2, 3500000) <= 0) {
             _box.delBatch(_shared.buffID);
             throw new IOException();
         }
@@ -205,12 +204,12 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
             throw new IOException();
         }
         if (!_box.turnOverOneByOne()
-                || !_box.sendOutData(data)) {
+                || !_box.sendOutData(0, data.length, data)) {
             throw new IOException();
         }
         _buffIdAddr[1] = new Integer((data[0] & 0xFF) - 2).byteValue();
         if (!_box.turnOverOneByOne()
-                || !_box.sendOutData(new byte[] { data[0] })
+                || !_box.sendOutData(0, 1, data[0])
                 || !_box.updateBuff(D.INC_DATA, _buffIdAddr)
                 || ((add1 = _shared.nextAddress) == 0)
                 || !_box.turnOverOneByOne()

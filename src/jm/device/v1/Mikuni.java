@@ -83,20 +83,17 @@ class Mikuni extends jm.device.Mikuni implements IProtocol {
     }
     
     private byte[] readOneFrame(boolean isFinish) throws IOException {
-        byte[] temp;
         byte[] buff = new byte[256];
         int i = 0;
         byte before = 0;
-        while ((temp = _box.readBytes(1)) != null) {
-            buff[i] = temp[0];
-            i++;
-            if (before == 0x0D && temp[0] == 0x0A) {
+        for (; _box.readBytes(buff, i, 1) > 0; i++) {
+            if (before == 0x0D && buff[i] == 0x0A) {
                 break;
             }
-            before = temp[0];
+            before = buff[i];
         }
         
-        if (before != 0x0D || temp[0] != 0x0A) {
+        if (before != 0x0D || buff[i - 1] != 0x0A) {
             throw new IOException();
         }
         byte[] result = new byte[i];

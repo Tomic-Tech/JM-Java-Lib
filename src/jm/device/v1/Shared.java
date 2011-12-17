@@ -9,7 +9,7 @@ final class Shared {
     public int buffID;
     public Buffer buff; //CommBox 有关信息数据
     public Information info; //维护COMMBOX数据缓冲区
-    public ArrayList<Byte> cmdTemp; //写入命令缓冲区
+    public byte[] cmdTemp; //写入命令缓冲区
     public int lastError; //提供错误查询
     public boolean isDb20;
     public boolean isDoNow;
@@ -25,7 +25,7 @@ final class Shared {
         buffID = 0;
         buff = new Buffer();
         info = new Information();
-        cmdTemp = new ArrayList<Byte>();
+        cmdTemp = new byte[256];
         lastError = D.SUCCESS;
         isDb20 = false;
         isDoNow = true;

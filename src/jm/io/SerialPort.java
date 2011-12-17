@@ -288,10 +288,10 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native long nativeBytesAvailable(long handle);
+    private native int nativeBytesAvailable(long handle);
 
     @Override
-    public long bytesAvailable() throws IOException {
+    public int bytesAvailable() throws IOException {
         return nativeBytesAvailable(_handle);
     }
 
@@ -313,11 +313,11 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native long nativeRead(long handle, byte[] buff, long offset, long count);
+    private native int nativeRead(long handle, byte[] buff, int offset, int count);
 
     @Override
-    public long read(byte[] buff, long offset, long count) throws IOException {
-        long ret = nativeRead(_handle, buff, offset, count);
+    public int read(byte[] buff, int offset, int count) throws IOException {
+        int ret = nativeRead(_handle, buff, offset, count);
         if (ret != count) {
             throw new IOException();
         }
@@ -325,7 +325,7 @@ public final class SerialPort implements IPort {
     }
 
     @Override
-    public long read(byte[] buff, long offset, long count, long millicSeconds) throws IOException {
+    public int read(byte[] buff, int offset, int count, long millicSeconds) throws IOException {
         setReadTimeout(millicSeconds);
         return read(buff, offset, count);
     }
@@ -335,7 +335,7 @@ public final class SerialPort implements IPort {
         long bytesToRead = bytesAvailable();
         if (bytesToRead > 0) {
             buff = new byte[(int) bytesToRead];
-            read(buff, 0, bytesToRead);
+            read(buff, 0, (int)bytesToRead);
         }
         return buff;
     }
@@ -354,11 +354,11 @@ public final class SerialPort implements IPort {
         return (int) buff[0];
     }
 
-    private native long nativeWrite(long handle, byte[] data, long offset, long count);
+    private native int nativeWrite(long handle, byte[] data, int offset, int count);
 
     @Override
-    public long write(byte[] data, long offset, long count) throws IOException {
-        long ret = nativeWrite(_handle, data, offset, count);
+    public int write(byte[] data, int offset, int count) throws IOException {
+        int ret = nativeWrite(_handle, data, offset, count);
         if (ret != data.length) {
             throw new IOException();
         }

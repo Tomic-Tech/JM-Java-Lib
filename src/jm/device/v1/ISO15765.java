@@ -239,8 +239,8 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
             }
 
             restDataCount = dataLength * restFrameCount;
-            restFrames = _box.readBytes(restDataCount);
-            if (restFrames == null) {
+            restFrames = new byte[restDataCount];
+            if (_box.readBytes(restFrames, 0, restDataCount) <= 0) {
                 finishExecute(true);
                 throw new IOException();
             }
@@ -293,7 +293,7 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         if (!_box.newBatch(_shared.buffID)) {
             return false;
         }
-        if (!_box.sendOutData(data)
+        if (!_box.sendOutData(0, data.length, data)
                 || !_box.runReceive(D.RECEIVE)
                 || !_box.endBatch()
                 || !_box.runBatch(false, _shared.buffID)) {
@@ -309,8 +309,8 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
     }
 
     private byte[] readCmd() {
-        byte[] temp = _box.readBytes(3);
-        if (temp == null) {
+        byte[] temp = new byte[3];
+        if (_box.readBytes(temp, 0, 3) <= 0) {
             return null;
         }
         ArrayList<Byte> result = new ArrayList<Byte>();
@@ -329,8 +329,8 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
 
         length -= 2;
         if (length > 0) {
-            temp = _box.readBytes(length);
-            if (temp == null) {
+            temp = new byte[length];
+            if (_box.readBytes(temp, 0, length) <= 0) {
                 finishExecute(true);
                 return null;
             }
@@ -446,7 +446,7 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         }
         return false;
     }
-    
+
     private boolean setAcr(int acr, int acr0, int acr1, int acr2, int acr3) {
         byte[] buff = new byte[9];
         buff[0] = 0x20 | 6;
@@ -468,10 +468,10 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         }
         return false;
     }
-    
+
     private boolean setAmr(int amr, int amr0, int amr1, int amr2, int amr3) {
         byte[] buff = new byte[9];
-        
+
         buff[0] = 0x20 | 6;
         buff[1] = 0x55;
         buff[2] = new Integer(0xAA).byteValue();
@@ -481,9 +481,9 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         buff[6] = new Integer(amr1).byteValue();
         buff[7] = new Integer(amr2).byteValue();
         buff[8] = new Integer(amr3).byteValue();
-        
+
         if (sendCmd(buff)) {
-            byte [] recv = readCmd();
+            byte[] recv = readCmd();
             if (recv != null) {
                 if (recv[4] == SJA_OK) {
                     return true;
@@ -492,17 +492,18 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         }
         return false;
     }
-    
+
     private byte[] readOneFrame(boolean isFinish) throws IOException {
-        byte[] temp = _box.readBytes(3);
-        if (temp == null) {
+        byte[] temp = new byte[3];
+        if (_box.readBytes(temp, 0, 3) <= 0) {
             finishExecute(isFinish);
             throw new IOException();
         }
         ArrayList<Byte> result = new ArrayList<Byte>();
-        for (byte b : temp)
+        for (byte b : temp) {
             result.add(b);
-        
+        }
+
         int length = temp[0] & 0x0F;
         int mode = temp[0] & (CanbusIDMode.EXT.value() | CanbusFrameType.Remote.value());
         if ((mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value()))
@@ -511,14 +512,14 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         } else {
             length += EXT_FRAMEID_LENGTH;
         }
-        
+
         length -= 2;
         if (length <= 0) {
             finishExecute(isFinish);
             return null;
         }
-        temp = _box.readBytes(length);
-        if (temp == null) {
+        temp = new byte[length];
+        if (_box.readBytes(temp, 0, length) <= 0) {
             finishExecute(isFinish);
             throw new IOException();
         }
@@ -527,8 +528,9 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         }
         finishExecute(isFinish);
         temp = new byte[result.size()];
-        for (int i = 0; i < result.size(); i++)
+        for (int i = 0; i < result.size(); i++) {
             temp[i] = result.get(i);
+        }
         return unpack(temp);
     }
 }

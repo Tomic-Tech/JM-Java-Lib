@@ -32,77 +32,72 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
     }
 
     private byte[] readOneFrame(boolean isFinish) throws IOException {
-        byte[] temp = _box.readBytes(3);
-        byte[] result = null;
-        if (temp == null) {
+        byte[] temp = new byte[3];
+        int length = _box.readBytes(temp, 0, 3);
+        if (length <= 0) {
             finishExecute(isFinish);
             throw new IOException();
         }
+        byte[] result = null;
         if ((temp[1] & 0xFF) == _sourceAddress) {
             if ((temp[0] & 0xFF) == 0x80) {
-                byte[] temp2 = _box.readBytes(1);
-                if (temp2 == null) {
+                byte[] temp2 = new byte[1];
+                length = _box.readBytes(temp2, 0, 1);
+                if (length <= 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
-                int length = temp2[0] & 0xFF;
-                if (length == 0) {
+                length = temp2[0] & 0xFF;
+                if (length <= 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
                 result = new byte[KWP80HeaderLength + length + KWPChecksumLength];
                 System.arraycopy(temp, 0, result, 0, 3);
                 System.arraycopy(temp2, 0, result, 3, 1);
-                temp2 = _box.readBytes(length + KWPChecksumLength);
-                if (temp2 == null) {
+                length = _box.readBytes(result, KWP80HeaderLength, length + KWPChecksumLength);
+                if (length <= 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
-                System.arraycopy(temp2, 0, result, KWP80HeaderLength, length + KWPChecksumLength);
+
             } else {
-                int length = (temp[0] & 0xFF) - 0x80;
+                length = (temp[0] & 0xFF) - 0x80;
                 if (length == 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
                 result = new byte[KWP8XHeaderLength + length + KWPChecksumLength];
                 System.arraycopy(temp, 0, result, 0, 3);
-                temp = _box.readBytes(length + KWPChecksumLength);
-                if (temp == null) {
+                length = _box.readBytes(result, 3, length + KWPChecksumLength);
+                if (length <= 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
-                System.arraycopy(temp, 0, result, 3, length + KWPChecksumLength);
             }
         } else {
             if ((temp[0] & 0xFF) == 0x00) {
-                int length = temp[1] & 0xFF;
+                length = temp[1] & 0xFF;
                 if (length == 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
                 result = new byte[KWP00HeaderLength + length + KWPChecksumLength];
                 System.arraycopy(temp, 0, result, 0, 3);
-                temp = _box.readBytes(length);
-                if (temp == null) {
-                    finishExecute(isFinish);
-                    throw new IOException();
-                }
-                System.arraycopy(temp, 0, result, 3, length);
+                length = _box.readBytes(result, 3, length);
             } else {
-                int length = temp[0] & 0xFF;
+                length = temp[0] & 0xFF;
                 if (length == 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
                 result = new byte[KWPXXHeaderLength + length + KWPChecksumLength];
                 System.arraycopy(temp, 0, result, 0, 3);
-                temp = _box.readBytes(length - KWPChecksumLength);
-                if (temp == null) {
+                length = _box.readBytes(result, 3, length - KWPChecksumLength);
+                if (length <= 0) {
                     finishExecute(isFinish);
                     throw new IOException();
                 }
-                System.arraycopy(temp, 0, result, 3, length - KWPChecksumLength);
             }
         }
         finishExecute(isFinish);
@@ -110,14 +105,14 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         for (int i = 0; i < result.length - 1; i++) {
             checksum += result[i] & 0xFF;
         }
-        
+
         if (checksum != (result[result.length - 1] & 0xFF)) {
             throw new IOException();
         }
-        
+
         return unpack(result);
     }
-    
+
     @Override
     public void fastInit(byte[] data) throws IOException {
         int valueOpen = 0;
@@ -126,7 +121,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         } else {
             valueOpen = D.PWC | D.RZFC | D.CK;
         }
-        
+
         if (!_box.setCommCtrl(valueOpen, D.SET_NULL)
                 || !_box.setCommLine(_sendLine, _recvLine)
                 || !_box.setCommLink(D.RS_232 | D.BIT9_MARK | D.SEL_SL | D.UN_DB20, D.SET_NULL, D.SET_NULL)
@@ -143,29 +138,29 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         } catch (InterruptedException ex) {
             Logger.getLogger(ISO14230.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         _shared.buffID = 0;
         if (!_box.newBatch(_shared.buffID)) {
             throw new IOException();
         }
-        byte [] packEnter = pack(data);
-        
+        byte[] packEnter = pack(data);
+
         if (!_box.setLineLevel(D.COMS, D.SET_NULL)
                 || !_box.commboxDelay(25000)
                 || !_box.setLineLevel(D.SET_NULL, D.COMS)
                 || !_box.commboxDelay(25000)
-                || !_box.sendOutData(packEnter)
+                || !_box.sendOutData(0, packEnter.length, packEnter)
                 || !_box.runReceive(D.REC_FR)
                 || !_box.endBatch()) {
             _box.delBatch(_shared.buffID);
             throw new IOException();
         }
-        
+
         if (!_box.runBatch(false, _shared.buffID)) {
             throw new IOException();
         }
         packEnter = readOneFrame();
-        
+
         if (!_box.checkResult(55000)
                 || !_box.delBatch(_shared.buffID)
                 || !_box.setCommTime(D.SETWAITTIME, 55000)) {
@@ -190,13 +185,13 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         } catch (InterruptedException ex) {
             Logger.getLogger(ISO14230.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         _shared.buffID = 0;
         if (!_box.newBatch(_shared.buffID)) {
             throw new IOException();
         }
-        
-        if (!_box.sendOutData(new byte[] { new Integer(addrCode).byteValue()})
+
+        if (!_box.sendOutData(0, 1, (byte)addrCode)
                 || !_box.setCommLine((_recvLine == D.RK_NO) ? _sendLine : D.SK_NO, _recvLine)
                 || !_box.runReceive(D.SET55_BAUD)
                 || !_box.runReceive(D.REC_LEN_1)
@@ -208,20 +203,20 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
             _box.delBatch(_shared.buffID);
             throw new IOException();
         }
-        
-        byte[] temp = null;
+
+        byte[] temp = new byte[3];
         if (!_box.runBatch(false, _shared.buffID)
-                || ((temp = _box.readData(3, 3000000)) == null)
+                || (_box.readData(temp, 0, 3, 3000000) <= 0)
                 || !_box.checkResult(500000)) {
             _box.delBatch(_shared.buffID);
             throw new IOException();
         }
-        
+
         if (!_box.delBatch(_shared.buffID)
                 || !_box.setCommTime(D.SETWAITTIME, 55000)) {
             throw new IOException();
         }
-        
+
         if (temp[2] != 0) {
             throw new IOException();
         }
@@ -279,7 +274,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         _mode = _linkMode;
         byte[] buff = pack(data);
         _mode = _msgMode;
-        
+
         _default.setKeepLink(buff);
     }
 }

@@ -4,21 +4,21 @@ import java.io.IOException;
 
 public interface IPort {
 
-    public long bytesAvailable() throws IOException;
+    public int bytesAvailable() throws IOException;
 
     public void setReadTimeout(long millicSeconds) throws IOException;
 
     public void setWriteTimeout(long millicSeconds) throws IOException;
 
-    public long read(byte[] buff, long offset, long count) throws IOException;
+    public int read(byte[] buff, int offset, int count) throws IOException;
 
-    public long read(byte[] buff, long offset, long count, long millicSeconds) throws IOException;
+    public int read(byte[] buff, int offset, int count, long millicSeconds) throws IOException;
 
     public int readByte() throws IOException;
 
     public int readByte(long millicSeconds) throws IOException;
 
-    public long write(byte[] data, long offset, long count) throws IOException;
+    public int write(byte[] data, int offset, int count) throws IOException;
 
     public void discardInBuffer() throws IOException;
 

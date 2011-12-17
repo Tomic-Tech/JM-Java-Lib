@@ -20,6 +20,5 @@ public interface IComm<P> {
 
     void setKeepLink(byte[] data) throws IOException;
 
-    void setTimeouts(int txB2B, int rxB2B, int txF2F, int rxF2F, int total)
-            throws IOException;
+    void setTimeouts(int txB2B, int rxB2B, int txF2F, int rxF2F, int total) throws IOException;
 }

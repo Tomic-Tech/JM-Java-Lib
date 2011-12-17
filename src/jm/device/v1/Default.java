@@ -22,14 +22,14 @@ final class Default<T extends IProtocol & jm.device.IProtocol> {
             return false;
         }
         if (needRecv) {
-            if (!_box.sendOutData(sendBuff)
+            if (!_box.sendOutData(0, sendBuff.length, sendBuff)
                     || !_box.runReceive(D.RECEIVE)
                     || !_box.endBatch()
                     || !_box.runBatch(false, _shared.buffID)) {
                 return false;
             }
         } else {
-            if (!_box.sendOutData(sendBuff)
+            if (!_box.sendOutData(0, sendBuff.length, sendBuff)
                     || !_box.endBatch()
                     || !_box.runBatch(false, _shared.buffID)) {
                 return false;
@@ -43,7 +43,7 @@ final class Default<T extends IProtocol & jm.device.IProtocol> {
         if (!_box.newBatch(D.LINKBLOCK)) {
             return false;
         }
-        if (!_box.sendOutData(data)
+        if (!_box.sendOutData(0, data.length, data)
                 || !_box.endBatch()) {
             return false;
         }
