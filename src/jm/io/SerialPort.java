@@ -5,12 +5,16 @@ import java.io.IOException;
 public final class SerialPort implements IPort {
 
     static {
-        System.loadLibrary("jmlib");
+//        System.loadLibrary("jmcore");
     }
 
     public enum Parity {
 
-        None(0), Odd(1), Even(2), Mark(3), Space(4);
+        None(0), 
+        Odd(1), 
+        Even(2), 
+        Mark(3), 
+        Space(4);
         private int _value;
 
         private Parity(int value) {
@@ -24,7 +28,9 @@ public final class SerialPort implements IPort {
 
     public enum Stopbits {
 
-        One(0), OnePointFive(1), Two(2);
+        One(0), 
+        OnePointFive(1), 
+        Two(2);
         private int _value;
 
         private Stopbits(int value) {
@@ -38,7 +44,9 @@ public final class SerialPort implements IPort {
 
     public enum FlowControl {
 
-        None(0), Hardware(1), Software(2);
+        None(0), 
+        Hardware(1), 
+        Software(2);
         private int _value;
 
         private FlowControl(int value) {
@@ -51,9 +59,9 @@ public final class SerialPort implements IPort {
     }
     private long _handle;
 
-    private native long nativeNewSerialPort();
+    private static native long nativeNewSerialPort();
 
-    private native void nativeFree(long handle);
+    private static native void nativeFree(long handle);
 
     public SerialPort() {
         _handle = nativeNewSerialPort();
@@ -105,7 +113,7 @@ public final class SerialPort implements IPort {
 
     public void setBaudrate(int baudrate) throws IOException {
         int ret = nativeSetBaudrate(_handle, baudrate);
-        if (ret == 0) {
+        if (ret != 0) {
             throw new IOException();
         }
     }
@@ -167,7 +175,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeSetStopbits(long handle, int stopbits);
+    private static native int nativeSetStopbits(long handle, int stopbits);
 
     public void setStopbits(Stopbits stopbits) throws IOException {
         int ret = nativeSetStopbits(_handle, stopbits.value());
@@ -176,7 +184,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeStopbits(long handle);
+    private static native int nativeStopbits(long handle);
 
     public Stopbits stopbits() throws IOException {
         int ret = nativeStopbits(_handle);
@@ -191,7 +199,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native static int nativeSetFlowControl(long handle, int flow);
+    private static native int nativeSetFlowControl(long handle, int flow);
 
     public void setFlowControl(FlowControl flowControl) throws IOException {
         int ret = nativeSetFlowControl(_handle, flowControl.value());
@@ -200,7 +208,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native static int nativeFlowControl(long handle);
+    private static native int nativeFlowControl(long handle);
 
     public FlowControl flowControl() throws IOException {
         int ret = nativeFlowControl(_handle);
@@ -215,7 +223,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeSetReadTimeout(long handle, long millicSeconds);
+    private static native int nativeSetReadTimeout(long handle, long millicSeconds);
 
     @Override
     public void setReadTimeout(long millicSeconds) throws IOException {
@@ -225,7 +233,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeSetWriteTimeout(long handle, long millicSeconds);
+    private static native int nativeSetWriteTimeout(long handle, long millicSeconds);
 
     @Override
     public void setWriteTimeout(long millicSeconds) throws IOException {
@@ -235,13 +243,13 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native boolean nativeIsOpen(long handle);
+    private static native boolean nativeIsOpen(long handle);
 
     public boolean isOpen() throws IOException {
         return nativeIsOpen(_handle);
     }
 
-    private native int nativeOpen(long handle);
+    private static native int nativeOpen(long handle);
 
     public void open() throws IOException {
         int ret = nativeOpen(_handle);
@@ -250,7 +258,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeClose(long handle);
+    private static native int nativeClose(long handle);
 
     public void close() throws IOException {
         int ret = nativeClose(_handle);
@@ -259,7 +267,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeFlush(long handle);
+    private static native int nativeFlush(long handle);
 
     public void flush() throws IOException {
         int ret = nativeFlush(_handle);
@@ -268,7 +276,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeDiscardInBuffer(long handle);
+    private static native int nativeDiscardInBuffer(long handle);
 
     @Override
     public void discardInBuffer() throws IOException {
@@ -278,7 +286,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeDiscardOutBuffer(long handle);
+    private static native int nativeDiscardOutBuffer(long handle);
 
     @Override
     public void discardOutBuffer() throws IOException {
@@ -288,14 +296,14 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeBytesAvailable(long handle);
+    private static native int nativeBytesAvailable(long handle);
 
     @Override
     public int bytesAvailable() throws IOException {
         return nativeBytesAvailable(_handle);
     }
 
-    private native int nativeSetDtr(long handle, boolean set);
+    private static native int nativeSetDtr(long handle, boolean set);
 
     public void setDtr(boolean set) throws IOException {
         int ret = nativeSetDtr(_handle, set);
@@ -304,7 +312,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeSetRts(long handle, boolean set);
+    private static native int nativeSetRts(long handle, boolean set);
 
     public void setRts(boolean set) throws IOException {
         int ret = nativeSetRts(_handle, set);
@@ -313,7 +321,7 @@ public final class SerialPort implements IPort {
         }
     }
 
-    private native int nativeRead(long handle, byte[] buff, int offset, int count);
+    private static native int nativeRead(long handle, byte[] buff, int offset, int count);
 
     @Override
     public int read(byte[] buff, int offset, int count) throws IOException {
@@ -335,7 +343,7 @@ public final class SerialPort implements IPort {
         long bytesToRead = bytesAvailable();
         if (bytesToRead > 0) {
             buff = new byte[(int) bytesToRead];
-            read(buff, 0, (int)bytesToRead);
+            read(buff, 0, (int) bytesToRead);
         }
         return buff;
     }
@@ -344,26 +352,26 @@ public final class SerialPort implements IPort {
     public int readByte() throws IOException {
         byte[] buff = new byte[1];
         read(buff, 0, 1);
-        return (int) buff[0];
+        return buff[0] & 0xFF;
     }
 
     @Override
     public int readByte(long millicSeconds) throws IOException {
         byte[] buff = new byte[1];
         read(buff, 0, 1, millicSeconds);
-        return (int) buff[0];
+        return buff[0] & 0xFF;
     }
 
-    private native int nativeWrite(long handle, byte[] data, int offset, int count);
+    private static native int nativeWrite(long handle, byte[] data, int offset, int count);
 
     @Override
     public int write(byte[] data, int offset, int count) throws IOException {
         int ret = nativeWrite(_handle, data, offset, count);
-        if (ret != data.length) {
+        if (ret != count) {
             throw new IOException();
         }
         return ret;
     }
 
-    public native static String[] getSystemPorts();
+    public static native String[] getSystemPorts();
 }

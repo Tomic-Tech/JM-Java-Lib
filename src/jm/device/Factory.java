@@ -14,7 +14,7 @@ import jm.io.IPort;
 public class Factory {
     static private EnumMap<CommboxVersion, Commbox> _objMap = null;
     static {
-        EnumMap<CommboxVersion, Commbox> _objMap = new EnumMap<CommboxVersion, Commbox>(CommboxVersion.class);
+        _objMap = new EnumMap<>(CommboxVersion.class);
     }
     
     public static Commbox create(CommboxVersion ver, IPort port) {

@@ -106,7 +106,7 @@ final class Box {
     // d.在发送转发命令时错误。
     // ///////////////////////////////////////////////////////////////////////////
     protected boolean commboxDo(int commandWord, int offset, int count, byte... buff) {
-        if (buff.length > D.CMD_DATALEN) {
+        if (count > D.CMD_DATALEN) {
             return sendDataToECU(commandWord, offset, count, buff);
         } else {
             return commboxCommand(commandWord, offset, count, buff);
@@ -199,35 +199,29 @@ final class Box {
     }
 
     private boolean commboxCommand(int commandWord, int offset, int count, byte... buff) {
+        int checksum = commandWord + count;
         if (commandWord < D.WR_DATA) {
             if (count == 0) {
                 _shared.lastError = D.ILLIGICAL_LEN;
                 return false;
             }
+            checksum--;
         } else {
             if (count != 0) {
                 _shared.lastError = D.ILLIGICAL_LEN;
                 return false;
             }
         }
-        byte[] command = null;
-
-        if (count == 0) {
-            command = new byte[2];
-            command[0] = new Integer(commandWord + _shared.info.headPassword).byteValue();
-            command[1] = new Integer(commandWord).byteValue();
-        } else {
-            int i;
-            int checksum = commandWord + count;
-            command = new byte[2 + buff.length];
-            command[0] = new Integer(checksum + _shared.info.headPassword).byteValue();
-            for (i = 1; i <= count; i++) {
-                command[i] = buff[i - 1 + offset];
-                checksum += buff[i - 1 + offset] & 0xFF;
-            }
-            command[i] = new Integer(checksum).byteValue();
+        byte[] command = new byte[2 + count];
+        command[0] = new Integer(checksum + _shared.info.headPassword).byteValue();
+        int i;
+        for (i = 1; i <= count; i++) {
+            command[i] = buff[i - 1];
+            checksum += command[i] & 0xFF;
         }
-        for (int i = 0; i < 3; i++) {
+        command[i] = new Integer(checksum).byteValue();
+
+        for (i = 0; i < 3; i++) {
             if (commandWord != D.STOP_REC && commandWord != D.STOP_EXECUTE) {
                 try {
                     if (!checkIdle()
@@ -430,7 +424,7 @@ final class Box {
         int i = 0;
         while (i < 4) {
             temp[i] = new Integer(rand.nextInt() % 256).byteValue();
-            temp[4] = new Integer(temp[4] & 0xFF + temp[i] & 0xFF).byteValue();
+            temp[4] = new Integer((temp[4] & 0xFF) + (temp[i] & 0xFF)).byteValue();
             i++;
         }
         try {
@@ -441,8 +435,8 @@ final class Box {
         }
         int checksum = (temp[4] & 0xFF) + (temp[4] & 0xFF);
         i = 0;
-        while (i < temp.length) {
-            checksum += (password[0] & 0xFF) ^ (temp[i % 5] & 0xFF);
+        while (i < password.length) {
+            checksum += (password[i] & 0xFF) ^ (temp[i % 5] & 0xFF);
             i++;
         }
         try {
@@ -455,7 +449,7 @@ final class Box {
         }
         _shared.info.headPassword = temp[0] & 0xFF;
 
-        if (checksum != _shared.info.headPassword) {
+        if ((checksum & 0xFF) != _shared.info.headPassword) {
             _shared.lastError = D.CHECKSUM_ERROR;
             return false;
         }
@@ -570,7 +564,7 @@ final class Box {
             if (!commboxDo(D.SET_UPBAUD, 0, 1, new Integer(baud).byteValue())) {
                 return false;
             }
-            if (!checkResult(150000)) {
+            if (!checkResult(100000)) {
                 return false;
             }
             port.discardInBuffer();
@@ -693,20 +687,23 @@ final class Box {
         if ((_shared.buff.add[buffID] & 0xFF) != D.NULLADD && buffID != D.LINKBLOCK && !delBatch(buffID)) {
             return false;
         }
-        _shared.cmdTemp[0] = new Integer(D.WR_DATA).byteValue();
-        _shared.cmdTemp[1] = 0x01;
+        int header = D.WR_DATA;
+        int length = 0x01;
         if (buffID == D.LINKBLOCK) {
             _shared.cmdTemp[2] = new Integer(0xFF).byteValue();
             _shared.buff.add[D.LINKBLOCK] = new Integer(_shared.info.cmdBuffLen).byteValue();
         } else {
             _shared.cmdTemp[2] = _shared.buff.add[D.SWAPBLOCK];
         }
+        
         if (_shared.buff.size() <= 1) {
             _shared.lastError = D.BUFFFLOW;
             return false;
         }
         _shared.cmdTemp[3] = new Integer(D.WR_DATA + 0x01 + (_shared.cmdTemp[2] & 0xFF)).byteValue();
-        _shared.cmdTemp[0] = new Integer(_shared.info.headPassword).byteValue();
+        header += _shared.info.headPassword;
+        _shared.cmdTemp[0] = new Integer(header).byteValue();
+        _shared.cmdTemp[1] = new Integer(length).byteValue();
         _shared.buff.id = buffID;
         _shared.isDoNow = false;
         return true;
@@ -731,7 +728,7 @@ final class Box {
     public boolean addToBuff(int commandWord, int offset, int count, byte... data) {
         byte[] cmdTemp = _shared.cmdTemp;
         int dataLength = cmdTemp[1] & 0xFF;
-        int checksum = cmdTemp[(cmdTemp[1] & 0xFF) + 2] & 0xFF;
+        int checksum = cmdTemp[dataLength + 2] & 0xFF;
         _shared.nextAddress = dataLength + count + 1;
         Buffer buffer = _shared.buff;
         if (buffer.id == D.NULLADD) {
@@ -755,33 +752,37 @@ final class Box {
                 // 是否合法命令?
                 if (commandWord == D.SEND_DATA && getBoxVer() > 0x400) {
                     // 增加发送长命令
-                    cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(D.SEND_CMD).byteValue();
+                    cmdTemp[dataLength + 2] = new Integer(D.SEND_CMD).byteValue();
                     checksum += D.SEND_CMD;
-                    cmdTemp[1] = new Integer((cmdTemp[1] & 0xFF) + 1).byteValue();
-                    cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(commandWord + count).byteValue();
-                    if (data != null && data.length != 0) {
-                        cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer((cmdTemp[1] & 0xFF) - 1).byteValue();
+                    dataLength++;
+                    cmdTemp[dataLength + 2] = new Integer(commandWord + count).byteValue();
+                    if (count > 0) {
+                        int temp = cmdTemp[dataLength + 2] & 0xFF;
+                        cmdTemp[dataLength + 2] = new Integer(temp - 1).byteValue();
                     }
-                    checksum += cmdTemp[(cmdTemp[1] & 0xFF) + 2];
-                    cmdTemp[1] = new Integer((cmdTemp[1] & 0xFF) + 1).byteValue();
-                    for (int i = 0; i < count; i++, cmdTemp[1] = new Integer((cmdTemp[1] & 0xFF) + 1).byteValue()) {
-                        cmdTemp[(cmdTemp[1] & 0xFF) + 2] = data[i];
+                    checksum += cmdTemp[dataLength + 2] & 0xFF;
+                    dataLength++;
+                    for (int i = 0; i < count; i++, dataLength++) {
+                        cmdTemp[dataLength + 2] = data[i];
                         checksum += data[i] & 0xFF;
                     }
-                    cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(checksum + count + 2).byteValue();
+                    cmdTemp[1] = new Integer(dataLength).byteValue();
+                    cmdTemp[dataLength + 2] = new Integer(checksum + count + 2).byteValue();
                     _shared.nextAddress++;
                 } else {
-                    cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(commandWord + count).byteValue();
-                    if (data != null && data.length != 0) {
-                        cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(cmdTemp[(cmdTemp[1] & 0xFF) + 2] - 1).byteValue();
+                    cmdTemp[dataLength + 2] = new Integer(commandWord + count).byteValue();
+                    if (count > 0) {
+                        int temp = cmdTemp[dataLength + 2];
+                        cmdTemp[dataLength + 2] = new Integer(temp - 1).byteValue();
                     }
-                    checksum += cmdTemp[(cmdTemp[1] & 0xFF) + 2] & 0xFF;
-                    cmdTemp[1] = new Integer((cmdTemp[1] & 0xFF) + 1).byteValue();
-                    for (int i = 0; i < count; i++, cmdTemp[1] = new Integer((cmdTemp[1] & 0xFF) + 1).byteValue()) {
-                        cmdTemp[(cmdTemp[1] & 0xFF) + 2] = data[i];
+                    checksum += cmdTemp[dataLength + 2] & 0xFF;
+                    dataLength++;
+                    for (int i = 0;i < count; i++, dataLength++) {
+                        cmdTemp[dataLength + 2] = data[i];
                         checksum += data[i] & 0xFF;
                     }
-                    cmdTemp[(cmdTemp[1] & 0xFF) + 2] = new Integer(checksum + count + 1).byteValue();
+                    cmdTemp[1] = new Integer(dataLength).byteValue();
+                    cmdTemp[dataLength + 2] = new Integer(checksum + count + 1).byteValue();
                     _shared.nextAddress++; // Ogilvy Xu add.
                 }
                 return true;
@@ -829,7 +830,7 @@ final class Box {
                     buff.id = D.NULLADD;
                     return false;
                 }
-                if (!checkIdle() || (_port.write(_shared.cmdTemp, 0, (cmdTemp[1] & 0xFF + 3)) != (_shared.cmdTemp[1] & 0xFF) + 3)) {
+                if (!checkIdle() || (_port.write(_shared.cmdTemp, 0, (cmdTemp[1] & 0xFF) + 3) != (_shared.cmdTemp[1] & 0xFF) + 3)) {
                     continue;
                 } else if (sendOk(20 * ((cmdTemp[1] & 0xFF) + 10))) {
                     break;
@@ -1178,9 +1179,9 @@ final class Box {
                 time = (time * 2) / 3;
             }
             type = type + (D.SETBYTETIME & 0xF0);
-            time = new Long(time / ((_shared.info.timeUnit / 1000000))).intValue();
+            time = new Double(time / ((_shared.info.timeUnit / 1000000.0))).intValue();
         } else {
-            time = new Long((time / _shared.info.timeBaseDB) / (_shared.info.timeUnit / 1000000)).intValue();
+            time = new Double((time / _shared.info.timeBaseDB) / (_shared.info.timeUnit / 1000000.0)).intValue();
         }
         if (time > 65535) {
             _shared.lastError = D.COMMTIME_OUT;
@@ -1365,15 +1366,15 @@ final class Box {
         byte[] timeBuff = new byte[2];
         int delayWord = D.DELAYSHORT;
         Information info = _shared.info;
-        time = new Long((time * 1000) / (info.timeUnit / 1000000)).intValue();
+        time = new Double(time / (info.timeUnit / 1000000.0)).intValue();
         if (time == 0) {
             _shared.lastError = D.SETTIME_ERROR;
             return false;
         }
         if (time > 65535) {
-            time = new Long(time / info.timeBaseDB).intValue();
+            time = new Double(time / info.timeBaseDB).intValue();
             if (time > 65535) {
-                time = new Long(time / info.timeBaseDB).intValue();
+                time = new Double(time / info.timeBaseDB).intValue();
                 if (time > 65535) {
                     _shared.lastError = D.COMMTIME_OUT;
                     return false;
