@@ -14,7 +14,7 @@ final class Default<T extends IProtocol & jm.device.IProtocol> {
 
     public boolean sendOneFrame(byte[] data, boolean needRecv) {
         _shared.buffID = 0;
-        if (_box.newBatch(_shared.buffID)) {
+        if (!_box.newBatch(_shared.buffID)) {
             return false;
         }
         byte[] sendBuff = _protocol.pack(data);

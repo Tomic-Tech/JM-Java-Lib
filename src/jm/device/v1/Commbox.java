@@ -37,16 +37,16 @@ public class Commbox extends jm.device.Commbox {
     @Override
     public IComm<?> configure(ProtocolType type) throws IOException {
         if (type.equals(ProtocolType.ISO14230)) {
-            return new Comm<ISO14230>(_box, new ISO14230(_box, _shared));
+            return new Comm<>(_box, new ISO14230(_box, _shared));
         } else if (type.equals(ProtocolType.ISO15765)) {
             ISO15765 p = new ISO15765(_box, _shared);
-            IComm comm = new Comm<ISO15765>(_box, p);
+            IComm comm = new Comm<>(_box, p);
             p.prepare();
             return comm;
         } else if (type.equals(ProtocolType.KWP1281)) {
             return new KWP1281Comm(_box, new KWP1281(_box, _shared));
         } else if (type.equals(ProtocolType.MIKUNI)) {
-            return new Comm<Mikuni>(_box, new Mikuni(_box, _shared));
+            return new Comm<>(_box, new Mikuni(_box, _shared));
         }
         return null;
     }

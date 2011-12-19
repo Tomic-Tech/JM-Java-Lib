@@ -20,7 +20,7 @@ class Mikuni extends jm.device.Mikuni implements IProtocol {
     public Mikuni(Box box, Shared shared) {
         _box = box;
         _shared = shared;
-        _default = new Default<Mikuni>(_box, _shared, this);
+        _default = new Default<>(_box, _shared, this);
     }
     
     @Override
