@@ -1,7 +1,6 @@
 package jm.device.v1;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Random;
 
 import java.util.logging.Level;
@@ -603,6 +602,7 @@ final class Box {
         try {
             port.setBaudrate(9600);
             port.open();
+            port.setDtr(true);
             for (int i = 0; i < 3; i++) {
                 setRF(D.RESET_RF, 0);
                 setRF(D.SETDTR_L, 0);
@@ -1493,13 +1493,12 @@ final class Box {
                 }
             }
             return false;
-        } catch (IOException e) {
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
         }
         return false;
     }
 
-    int readBytes(byte[] buff, int offset, int count) {
+    public int readBytes(byte[] buff, int offset, int count) {
         return readData(buff, offset, count, _shared.resWaitTime);
     }
 }

@@ -27,6 +27,14 @@ public class Factory {
                 _objMap.put(ver, box);
             }
             box.setPort(port);
+        } else if (ver.equals(CommboxVersion.W80)) {
+            if (_objMap.containsKey(ver)) {
+                box = _objMap.get(ver);
+            } else {
+                box = new jm.device.w80.Commbox();
+                _objMap.put(ver, box);
+            }
+            box.setPort(port);
         }
         return box;
     }
