@@ -1,10 +1,94 @@
 package jm.device.v1;
 
-final class D {
+public final class D {
+
+    public D(boolean isW80) {
+        if (isW80) {
+            WR_DATA = 0x00;
+            STOP_REC = 0x04;
+            STOP_EXECUTE = 0x08;
+            SET_UPBAUD = 0x0C;
+            RESET = 0x10;
+            GET_TIME = 0x18;
+            GET_SET = 0x1C;
+            GET_PORT = 0x2C;
+            SET55_BAUD = 0x44;
+            SET_ONEBYONE = 0x48;
+            GET_PORT1 = 0x5C;
+            SEND_DATA = 0x60;
+            DELAYSHORT = 0x78;
+            DELAYTIME = 0x7C;
+            SUB_BYTE = 0xB0;
+            COMMBOXID_ERR = 1;
+            DISCONNECT_COMM = 2;
+            DISCONNECT_COMMBOX = 3;
+        } else {
+            WR_DATA = 0xD0;
+            STOP_REC = 0xFB;
+            STOP_EXECUTE = 0xFC;
+            SET_UPBAUD = 0xB0;
+            RESET = 0xF3;
+            GET_TIME = 0xF5;
+            GET_SET = 0xF6;
+            GET_PORT = 0xF7;
+            SET55_BAUD = 0xDA;
+            SET_ONEBYONE = 0xD9;
+            GET_PORT1 = 0xD8;
+            SEND_DATA = 0x00;
+            DELAYSHORT = 0xB4;
+            DELAYTIME = 0xB8;
+            SUB_BYTE = 0xCD;
+            COMMBOXID_ERR = 0xE4;
+            DISCONNECT_COMM = 0xF8;
+            DISCONNECT_COMMBOX = 0xF7;
+        }
+    }
+    // Only For W80
+    public static final int BOXINFO_LEN = 12;
+    public static final int MAXPORT_NUM = 4;
+    public static final int MAXBUFF_NUM = 4;
+    public static final int MAXBUFF_LEN = 0x48;
+    public static final int GET_CPU = 0x14;
+    public static final int GET_LINK = 0x20;
+    public static final int GET_BUF = 0x24;
+    public static final int GET_CMD = 0x28;
+    public static final int GET_BOXID = 0x30;
+    public static final int DO_BAT_C = 0x34;
+    public static final int DO_BAT_CN = 0x38;
+    public static final int DO_BAT_L = 0x3C;
+    public static final int DO_BAT_LN = 0x40;
+    public static final int SET_BAUD = 0x4C;
+    public static final int RUN_LINK = 0x50;
+    public static final int STOP_LINK = 0x54;
+    public static final int CLEAR_LINK = 0x58;
+    public static final int SET_CTRL = 0x64;
+    public static final int SET_PORT0 = 0x68;
+    public static final int SET_PORT1 = 0x6C;
+    public static final int SET_PORT2 = 0x70;
+    public static final int SET_PORT3 = 0x74;
+    public static final int DELAYDWORD = 0x80;
+    public static final int COPY_BYTE = 0x9C;
+    public static final int UPDATE_BYTE = 0xA0;
+    public static final int INC_BYTE = 0xA4;
+    public static final int DEC_BYTE = 0xA8;
+    public static final int ADD_BYTE = 0xAC;
+    public static final int INVERT_BYTE = 0xB4;
+    public static final int RECV_ERR = 0xAA; //接收错误
+    public static final int RECV_OK = 0x55; //接收正确
+    public static final int BUSY = 0xBB; //开始执行
+    public static final int READY = 0xDD; //执行结束
+    public static final int ERROR = 0xEE; //执行错误
+    //RF多对一的设定接口,最多16个
+    public static final int RF_RESET = 0xD0;
+    public static final int RF_SETDTR_L = 0xD1;
+    public static final int RF_SETDTR_H = 0xD2;
+    public static final int RF_SET_BAUD = 0xD3;
+    public static final int RF_SET_ADDR = 0xD4;
+    public static final int OTHER_ERROR = 4;
+    // Only For C168
     // /////////////////////////////////////////////////////
     // CommBox 固定信息 宏定义表
     // /////////////////////////////////////////////////////
-
     public final static int NULLADD = 0xFF; // 表示此块无使用
     public final static int MAXIM_BLOCK = 0x40; // 命令缓从区的最大数
     public final static int SWAPBLOCK = MAXIM_BLOCK + 1; // 数据交换区的块表识
@@ -48,14 +132,14 @@ final class D {
      * 发送命令字，无校验，仅为一个字节，无运行返回，以等待运行结果标志返回。
      ***************************************************************************/
     // 1、写入命令缓冲区命令：
-    public final static int WR_DATA = 0xD0; // 写缓冲区命令字,写入数据到命令缓冲区
+    public final int WR_DATA; // 写缓冲区命令字,写入数据到命令缓冲区
     public final static int WR_LINK = 0xFF; // 若写入命令的地址为WR_LINK
     // ，写入数据到链路保持区链路保持区存放在命令缓冲区最后,存放次序:按地址从低到高
     public final static int SEND_LEN = 0xA8; // 一次发送数据的数据长度,0X70个数据
-    public final static int SEND_DATA = 0x00;
+    public final int SEND_DATA;//0x60//0x00;
     // 2、单字节命令：（大于写入命令缓冲区命令字 WR_DATA = 0xD0，皆为单字节命令区）
     // 非缓冲区命令
-    public final static int RESET = 0xF3; // 软件复位命令 清除所有缓冲区和寄存器内容。
+    public final int RESET;//0x10//0xF3; // 软件复位命令 清除所有缓冲区和寄存器内容。
     public final static int GETINFO = 0xF4;
     /*
      * 得到CPU速度 F9 返回CPU的指令执行时间（按纳秒计，数值传递，3个字节） 和时间控制参数 返回时间控制的指令执行数：
@@ -70,12 +154,12 @@ final class D {
      * (中断命令) #define GET_CMMAND 0xFA //得到命令数据 FE 返回上一执行命令。 (中断命令)
      */
     // 中断命令定义
-    public final static int STOP_REC = 0xFB; // 中断接受命令 强行退出当前接受命令，不返回错误。(中断命令)
-    public final static int STOP_EXECUTE = 0xFC; // 中断批处理命令
+    public final int STOP_REC;//0x04//0xFB; // 中断接受命令 强行退出当前接受命令，不返回错误。(中断命令)
+    public final int STOP_EXECUTE;//0x08//0xFC; // 中断批处理命令
     // 在当前执行时，通过该命令停止当前接受操作，返回错误。(中断命令)
     // 单字节缓冲区命令
     // #define GET_PORT1 0xD8 //等到通讯口的当前状态
-    public final static int SET_ONEBYONE = 0xD9; // 将原有的接受一个发送一个的标志翻转
+    public final int SET_ONEBYONE;//0x48//0xD9; // 将原有的接受一个发送一个的标志翻转
 
     /*
      * #define SET55_BAUD 0xDA //计算0x55的波特率 #define REC_FR 0xE0 //接受一帧命令 E0
@@ -111,15 +195,15 @@ final class D {
     public final static int SETPORT2 = 0xA8; // 只有一个字节的数据，设定端口2
     public final static int SETPORT3 = 0xAC; // 只有一个字节的数据，设定端口3
     // 已删除#define SETALLPORT 0x6F //只有四个字节的数据，设定端口0，1，2，3
-    public final static int SET_UPBAUD = 0xB0; // 设置上位机的通讯波特率 ,仅有数据位1位,定义如下:其他非法
+    public final int SET_UPBAUD;//0x0C//0xB0; // 设置上位机的通讯波特率 ,仅有数据位1位,定义如下:其他非法
 
     /*
      * #define UP_9600BPS 0x00 #define UP_19200BPS 0x01 #define UP_38400BPS 0x02
      * #define UP_57600BPS 0x03 #define UP_115200BPS 0x04
      */
-    public final static int DELAYSHORT = 0xB4; // 设定延时时间
+    public final int DELAYSHORT;//0x78//0xB4; // 设定延时时间
     // (DB20)只用2个数据位，单字节为低字节，双字节高字节在前，低字节在后。
-    public final static int DELAYTIME = 0xB8; // 设定延时时间
+    public final int DELAYTIME;//0x7C//0xB8; // 设定延时时间
     // (DB20)只用2个数据位，单字节为低字节，双字节高字节在前，低字节在后。
     public final static int DELAYLONG = 0xBC; // 设定延时时间 (DB200)
     // 只用2个数据位，单字节为低字节，双字节高字节在前，低字节在后。
@@ -285,13 +369,13 @@ final class D {
     public final static int ADD_DATA = 0xC6; // 86 结果地址1 操作地址1 操作地址2 结果地址1=操作地址1+操作地址2
     // 减法命令
     public final static int SUB_DATA = 0xCE; // 8E 结果地址1 操作地址1 操作地址2 结果地址1=操作地址1-操作地址2
-    public final static int SUB_BYTE = 0xCD; // 8D 结果地址1 数据1 结果地址1=数据1-结果地址1
+    public final int SUB_BYTE;//0xB0//0xCD; // 8D 结果地址1 数据1 结果地址1=数据1-结果地址1
     public final static int INVERT_DATA = 0xCC; // 8C 结果地址1 结果地址1=~结果地址
     // /////////////////////////////////////////////////////////////////////////////
     // 接受命令类型定义
     // /////////////////////////////////////////////////////////////////////////////
-    public final static int GET_PORT1 = 0xD8; // 等到通讯口的当前状态
-    public final static int SET55_BAUD = 0xDA; // 计算= 0x55的波特率
+    public final int GET_PORT1;//0x5C//0xD8; // 等到通讯口的当前状态
+    public final int SET55_BAUD;//0x44//0xDA; // 计算= 0x55的波特率
     public final static int REC_FR = 0xE0; // 接受一帧命令 E0 开始时回传开始接受信号，然后长期等待接受，接到数据实时回传，
     public final static int REC_LEN_1 = 0xE1; // 接受1个数据，返回
     public final static int REC_LEN_2 = 0xE2; // 接受2个数据，返回
@@ -312,10 +396,10 @@ final class D {
     // /////////////////////////////////////////////////////////////////////////////
     // ComBox记录信息和当前状态种类定义
     // /////////////////////////////////////////////////////////////////////////////
-    public final static int GET_TIME = 0xF5; // 得到时间设定 DD
+    public final int GET_TIME;//0x18//0xF5; // 得到时间设定 DD
     // 返回字节时间、等待发送时间、链路保持时间、字节超时时间、接受超时时间
-    public final static int GET_SET = 0xF6; // 得到链路设定 DE 返回链路控制字(3字节)、通讯波特率
-    public final static int GET_PORT = 0xF7; // 得到端口设置 DF 返回端口p0，p1，p2，p3
+    public final int GET_SET;//0x1C//0xF6; // 得到链路设定 DE 返回链路控制字(3字节)、通讯波特率
+    public final int GET_PORT;//0x2C//0xF7; // 得到端口设置 DF 返回端口p0，p1，p2，p3
     public final static int GET_LINKDATA = 0xF8; // 得到链路数据 FC 返回链路保持命令块中的所有内容 (中断命令)
     public final static int GET_BUFFDATA = 0xF9; // 得到缓冲器数据 FD 返回整个缓冲区数据 (中断命令)
     public final static int GET_COMMAND = 0xFA; // 得到命令数据 FE 返回上一执行命令。 (中断命令)
@@ -329,8 +413,8 @@ final class D {
     public final static int TIMEOUT_ERROR = 0xFB; // 接受数据超时错误
     public final static int LOST_VERSIONDATA = 0xFA; // 读到的Commbox数据长度不够.
     public final static int ILLIGICAL_CMD = 0xF9; // 无此操作功能,没有定义.
-    public final static int DISCONNECT_COMM = 0xF8; // 没有连接上串口
-    public final static int DISCONNECT_COMMBOX = 0xF7; // 没有连接上COMMBOX设备
+    public final int DISCONNECT_COMM;//2//0xF8; // 没有连接上串口
+    public final int DISCONNECT_COMMBOX;//3//0xF7; // 没有连接上COMMBOX设备
     public final static int NODEFINE_BUFF = 0xF6; // 没有此命令块存在,未定义
     public final static int APPLICATION_NOW = 0xF5; // 现有缓冲区申请,未取消,不能再此申请
     public final static int BUFFBUSING = 0xF4; // 此缓冲区有数据未被撤销,不能使用,需删除此缓冲区,方可使用
@@ -349,7 +433,7 @@ final class D {
     public final static int NOADDDATA = 0xE7; // 没有向申请的缓冲区填入命令,申请的缓冲区被撤销
     public final static int TESTNOLINK = 0xE6; // 选择的线路没有连通
     public final static int PORTLEVELIDLE = 0xE5; // 端口电平为常态
-    public final static int COMMBOXID_ERR = 0xE4; // COMMBOX ID错误
+    public final int COMMBOXID_ERR;//1//0xE4; // COMMBOX ID错误
     public final static int UP_TIMEOUT = 0xC0; // COMMBOX接受命令超时错误
     public final static int UP_DATAEER = 0xC1; // COMMBOX接受命令数据错误
     public final static int OVER_BUFF = 0xC2; // COMMBOX批处理缓冲区溢出,不判断链路保持数据是否会破坏缓冲区数据,

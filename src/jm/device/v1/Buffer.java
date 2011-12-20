@@ -8,7 +8,7 @@ package jm.device.v1;
 //BYTE CMDBuff_ADD[MAXIM_BLOCK+2];	//命令缓冲区地址
 //BYTE CMDBuff_Used[MAXIM_BLOCK];		//已使用的命令区连续纪录
 //////////////////////////////////////////////////////////////////////
-final class Buffer {
+public final class Buffer {
 
     public int id;
     public int usedNum;

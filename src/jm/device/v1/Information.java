@@ -12,7 +12,7 @@ package jm.device.v1;
 //BYTE Commbox_Port[3]	端口值
 //BYTE HeadPassword		命令头密码
 //////////////////////////////////////////////////////////////////////
-final class Information {
+public final class Information {
 
     public long timeUnit;
     public long timeBaseDB;

@@ -44,11 +44,10 @@ class Comm<P extends IProtocol & jm.device.IProtocol> implements IComm<P> {
     @Override
     public byte[] sendAndRecv(byte[] data) throws IOException {
         int times = D.REPLAYTIMES;
-        byte[] recvData = null;
         while (times-- != 0) {
             try {
                 sendFrames(data);
-                recvData = readFrames();
+                return readFrames();
             } catch (IOException e) {
                 if (times != 0) {
                     continue;
@@ -57,7 +56,7 @@ class Comm<P extends IProtocol & jm.device.IProtocol> implements IComm<P> {
                 throw e;
             }
         }
-        return recvData;
+        return null;
     }
 
     @Override

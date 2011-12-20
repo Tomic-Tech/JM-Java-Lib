@@ -23,9 +23,13 @@ public class Commbox extends jm.device.Commbox {
     @Override
     public void open() throws IOException {
         _shared = new Shared();
-        _box = new Box(getPort(), _shared);
-        if (!_box.openComm())
-            throw new IOException();
+        _box = new jm.device.v1.c168.Box(getPort(), _shared);
+        if (_box.openComm())
+            return;
+        _box = new jm.device.v1.w80.Box(getPort(), _shared);
+        if (_box.openComm())
+            return;
+        throw new IOException();
     }
 
     @Override

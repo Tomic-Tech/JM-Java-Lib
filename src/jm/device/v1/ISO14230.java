@@ -25,7 +25,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
     public ISO14230(Box box, Shared shared) {
         _box = box;
         _shared = shared;
-        _default = new Default<ISO14230>(_box, _shared, this);
+        _default = new Default<>(_box, _shared, this);
         _lLine = false;
         _sendLine = 0;
         _recvLine = 0;
@@ -193,7 +193,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
 
         if (!_box.sendOutData(0, 1, (byte)addrCode)
                 || !_box.setCommLine((_recvLine == D.RK_NO) ? _sendLine : D.SK_NO, _recvLine)
-                || !_box.runReceive(D.SET55_BAUD)
+                || !_box.runReceive(_box.getD().SET55_BAUD)
                 || !_box.runReceive(D.REC_LEN_1)
                 || !_box.turnOverOneByOne()
                 || !_box.runReceive(D.REC_LEN_1)

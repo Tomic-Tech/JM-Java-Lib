@@ -155,7 +155,7 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
 
         if (!_box.sendOutData(0, 1, (byte)addrCode)
                 || !_box.setCommLine(_kLine == D.RK1 ? D.SK_NO : _lLine, _kLine)
-                || !_box.runReceive(D.SET55_BAUD)
+                || !_box.runReceive(_box.getD().SET55_BAUD)
                 || !_box.runReceive(D.REC_LEN_1)
                 || !_box.turnOverOneByOne()
                 || !_box.runReceive(D.REC_LEN_1)
