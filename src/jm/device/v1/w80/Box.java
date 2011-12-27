@@ -80,11 +80,11 @@ public final class Box extends jm.device.v1.Box {
         }
 
         byte[] command = new byte[2 + count];
-        command[0] = new Integer(cmd).byteValue();
+        command[0] = (byte)(cmd);
         if (count > 0) {
             System.arraycopy(data, offset, command, 1, count);
         }
-        command[command.length - 1] = new Integer(cs).byteValue();
+        command[command.length - 1] = (byte)(cs);
 
         for (int i = 0; i < 3; i++) {
             if (!checkIdle()) {
@@ -134,7 +134,7 @@ public final class Box extends jm.device.v1.Box {
             return 0;
         }
         if ((len[0] & 0xFF) > maxLength) {
-            len[0] = new Integer(maxLength).byteValue();
+            len[0] = (byte)(maxLength);
         }
         if (readBytes(receiveBuffer, 0, len[0] & 0xFF) != (len[0] & 0xFF)) {
             return 0;
@@ -159,11 +159,11 @@ public final class Box extends jm.device.v1.Box {
                     return false;
                 }
                 if (getShared().isLink) {
-                    temp[0] = new Integer(0xFF).byteValue(); //写链路保持
+                    temp[0] = (byte)(0xFF); //写链路保持
                 } else {
                     temp[0] = 0; //写通讯命令
                 }
-                temp[1] = new Integer(count).byteValue();
+                temp[1] = (byte)(count);
                 System.arraycopy(buff, offset, temp, 2, count);
                 return sendCmd(getD().WR_DATA, 0, temp.length, temp);
             } else if (cmd == getD().SEND_DATA) {
@@ -172,9 +172,9 @@ public final class Box extends jm.device.v1.Box {
                 }
                 temp = new byte[4 + count];
                 temp[0] = 0; //写入位置
-                temp[1] = new Integer(count + 2).byteValue(); //数据包长度
-                temp[2] = new Integer(getD().SEND_DATA).byteValue(); //命令
-                temp[3] = new Integer(count - 1).byteValue(); //命令长度-1
+                temp[1] = (byte)(count + 2); //数据包长度
+                temp[2] = (byte)(getD().SEND_DATA); //命令
+                temp[3] = (byte)(count - 1); //命令长度-1
                 System.arraycopy(buff, offset, temp, 4, count);
                 if (!sendCmd(getD().WR_DATA, 0, temp.length, temp)) {
                     return false;
@@ -185,9 +185,9 @@ public final class Box extends jm.device.v1.Box {
             }
         } else {
             //写命令到缓冲区
-            getShared().buf[getShared().pos++] = new Integer(cmd).byteValue();
+            getShared().buf[getShared().pos++] = (byte)(cmd);
             if (cmd == getD().SEND_DATA) {
-                getShared().buf[getShared().pos++] = new Integer(count - 1).byteValue();
+                getShared().buf[getShared().pos++] = (byte)(count - 1);
             }
             getShared().startPos = getShared().pos;
             if (count > 0) {
@@ -208,8 +208,8 @@ public final class Box extends jm.device.v1.Box {
 
     private int getBuffData(int addr, byte[] buff, int maxLength) {
         byte[] temp = new byte[2];
-        temp[0] = new Integer(addr).byteValue();
-        temp[1] = new Integer(buff.length).byteValue();
+        temp[0] = (byte)(addr);
+        temp[1] = (byte)(buff.length);
         if (!doCmd(D.GET_BUF, 0, 2, temp)) {
             return 0;
         }
@@ -236,7 +236,7 @@ public final class Box extends jm.device.v1.Box {
         getShared().runFlag = 0;
         byte[] buf = new byte[32];
         for (i = 1; i < 4; i++) {
-            buf[i] = new Integer(rand.nextInt()).byteValue();
+            buf[i] = (byte)(rand.nextInt());
         }
         for (i = 0; i < 10; i++) {
             run += ((password[i] & 0xFF) ^ (buf[i % 3 + 1] & 0xFF)) & 0xFF;
@@ -259,7 +259,7 @@ public final class Box extends jm.device.v1.Box {
         getShared().timeExternDB = buf[i++] & 0xFF;
 
         for (i = 0; i < D.MAXPORT_NUM; i++) {
-            getShared().ports[i] = new Integer(0xFF).byteValue();
+            getShared().ports[i] = (byte)(0xFF);
         }
         getShared().pos = 0;
         getShared().isDb20 = false;
@@ -279,14 +279,14 @@ public final class Box extends jm.device.v1.Box {
     }
 
     public boolean setLineLevel(int valueLow, int valueHigh) {
-        getShared().ports[1] = new Integer((getShared().ports[1] & 0xFF) & ~valueLow).byteValue();
-        getShared().ports[1] = new Integer((getShared().ports[1] & 0xFF) | valueHigh).byteValue();
+        getShared().ports[1] = (byte)((getShared().ports[1] & 0xFF) & ~valueLow);
+        getShared().ports[1] = (byte)((getShared().ports[1] & 0xFF) | valueHigh);
         return doSet(D.SET_PORT1, 1, 1, getShared().ports);
     }
 
     public boolean setCommCtrl(int valueOpen, int valueClose) {
-        getShared().ports[2] = new Integer((getShared().ports[2] & 0xFF) & ~valueOpen).byteValue();
-        getShared().ports[2] = new Integer((getShared().ports[2] & 0xFF) | valueClose).byteValue();
+        getShared().ports[2] = (byte)((getShared().ports[2] & 0xFF) & ~valueOpen);
+        getShared().ports[2] = (byte)((getShared().ports[2] & 0xFF) | valueClose);
         return doSet(D.SET_PORT2, 2, 1, getShared().ports);
     }
 
@@ -297,7 +297,7 @@ public final class Box extends jm.device.v1.Box {
         if (recvLine > 7) {
             recvLine = 0x0F;
         }
-        getShared().ports[0] = new Integer(sendLine | (recvLine << 4)).byteValue();
+        getShared().ports[0] = (byte)(sendLine | (recvLine << 4));
         return doSet(D.SET_PORT0, 0, 1, getShared().ports);
     }
 
@@ -313,7 +313,7 @@ public final class Box extends jm.device.v1.Box {
         byte[] ctrlWord = new byte[3];
         int modeControl = ctrlWord1 & 0xE0;
         int length = 3;
-        ctrlWord[0] = new Integer(ctrlWord1).byteValue();
+        ctrlWord[0] = (byte)(ctrlWord1);
         if ((ctrlWord1 & 0x04) != 0) {
             getShared().isDb20 = true;
         } else {
@@ -322,8 +322,8 @@ public final class Box extends jm.device.v1.Box {
         if (modeControl == D.SET_VPW || modeControl == D.SET_PWM) {
             return doSet(D.SET_CTRL, 0, 1, ctrlWord);
         }
-        ctrlWord[1] = new Integer(ctrlWord2).byteValue();
-        ctrlWord[2] = new Integer(ctrlWord3).byteValue();
+        ctrlWord[1] = (byte)(ctrlWord2);
+        ctrlWord[2] = (byte)(ctrlWord3);
         if (ctrlWord3 == 0) {
             length--;
             if (ctrlWord2 == 0) {
@@ -346,8 +346,8 @@ public final class Box extends jm.device.v1.Box {
         if (instructNum > 65535 || instructNum < 10) {
             return false;
         }
-        baudTime[0] = new Double(instructNum / 256).byteValue();
-        baudTime[1] = new Double(instructNum % 256).byteValue();
+        baudTime[0] = (byte)(instructNum / 256);
+        baudTime[1] = (byte)(instructNum % 256);
         if (baudTime[0] == 0) {
             return doSet(D.SET_BAUD, 1, 1, baudTime);
         }
@@ -378,8 +378,8 @@ public final class Box extends jm.device.v1.Box {
         } else {
             time = new Double((time / getShared().timeBaseDB) / (getShared().boxTimeUnit / 1000000.0)).intValue();
         }
-        timeBuff[0] = new Integer(time / 256).byteValue();
-        timeBuff[1] = new Integer(time % 256).byteValue();
+        timeBuff[0] = (byte)(time / 256);
+        timeBuff[1] = (byte)(time % 256);
         if (timeBuff[0] == 0) {
             return doSet(type, 1, 1, timeBuff);
         }
@@ -405,8 +405,8 @@ public final class Box extends jm.device.v1.Box {
                 delayWord = getD().DELAYTIME;
             }
         }
-        timeBuff[0] = new Integer(time / 256).byteValue();
-        timeBuff[1] = new Integer(time % 256).byteValue();
+        timeBuff[0] = (byte)(time / 256);
+        timeBuff[1] = (byte)(time % 256);
         if (timeBuff[0] == 0) {
             return doSet(delayWord, 1, 1, timeBuff);
         }
@@ -428,7 +428,7 @@ public final class Box extends jm.device.v1.Box {
         int cmd = isStopExecute ? getD().STOP_EXECUTE : getD().STOP_REC;
         for (int i = 0; i < 3; i++) {
             try {
-                getPort().write(new byte[]{new Integer(cmd).byteValue()}, 0, 1);
+                getPort().write(new byte[]{(byte)(cmd)}, 0, 1);
                 if (checkSend()) {
                     if (isStopExecute && !checkResult(200000)) {
                         continue;
@@ -505,7 +505,7 @@ public final class Box extends jm.device.v1.Box {
     public boolean setPCBaud(int baud) {
         int i = 3;
         while ((i--) > 0) {
-            doCmd(getD().SET_UPBAUD, 0, 1, new byte[]{new Integer(baud).byteValue()}); //该命令BOX返回因PC端的波特率未改变而无法接收
+            doCmd(getD().SET_UPBAUD, 0, 1, new byte[]{(byte)(baud)}); //该命令BOX返回因PC端的波特率未改变而无法接收
             try {
                 SerialPort port = (SerialPort) getPort();
                 port.discardInBuffer();
@@ -525,7 +525,7 @@ public final class Box extends jm.device.v1.Box {
                 setRF(D.RF_SET_BAUD, baud); //该命令BOX返回因PC端的波特率已改变而应该接收到
                 port.discardInBuffer();
                 port.discardOutBuffer();
-                if (doCmd(getD().SET_UPBAUD, 0, 1, new byte[]{new Integer(baud).byteValue()})) {
+                if (doCmd(getD().SET_UPBAUD, 0, 1, new byte[]{(byte)(baud)})) {
                     return true;
                 }
             } catch (IOException ex) {
@@ -557,9 +557,9 @@ public final class Box extends jm.device.v1.Box {
 
     public boolean copyBuff(int dest, int src, int len) {
         byte[] buf = new byte[3];
-        buf[0] = new Integer(dest).byteValue();
-        buf[1] = new Integer(src).byteValue();
-        buf[2] = new Integer(len).byteValue();
+        buf[0] = (byte)(dest);
+        buf[1] = (byte)(src);
+        buf[2] = (byte)(len);
         return doSet(D.COPY_BYTE, 0, 3, buf);
     }
 
@@ -578,11 +578,11 @@ public final class Box extends jm.device.v1.Box {
             while (getShared().buf[i] != 0) {
                 int mode = getShared().buf[i] & 0xFC;
                 if (mode == D.COPY_BYTE) {
-                    getShared().buf[i + 3] = new Integer((getShared().buf[i + 3] & 0xFF) + D.MAXBUFF_LEN - getShared().pos).byteValue();
+                    getShared().buf[i + 3] = (byte)((getShared().buf[i + 3] & 0xFF) + D.MAXBUFF_LEN - getShared().pos);
                 } else if (mode == getD().SUB_BYTE) {
-                    getShared().buf[i + 2] = new Integer((getShared().buf[i + 2] & 0xFF) + D.MAXBUFF_LEN - getShared().pos).byteValue();
+                    getShared().buf[i + 2] = (byte)((getShared().buf[i + 2] & 0xFF) + D.MAXBUFF_LEN - getShared().pos);
                 } else {
-                    getShared().buf[i + 1] = new Integer((getShared().buf[i + 1] & 0xFF) + D.MAXBUFF_LEN - getShared().pos).byteValue();
+                    getShared().buf[i + 1] = (byte)((getShared().buf[i + 1] & 0xFF) + D.MAXBUFF_LEN - getShared().pos);
 
                 }
                 if ((getShared().buf[i] & 0xFF) == getD().SEND_DATA) {
@@ -619,7 +619,7 @@ public final class Box extends jm.device.v1.Box {
             getPort().discardInBuffer();
             getPort().discardOutBuffer();
             for (int i = 0; i < D.MAXPORT_NUM; i++) {
-                getShared().ports[i] = new Integer(0xFF).byteValue();
+                getShared().ports[i] = (byte)(0xFF);
             }
             return doCmd(getD().RESET, 0, 0, null);
         } catch (IOException ex) {

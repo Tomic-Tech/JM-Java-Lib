@@ -106,7 +106,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
             checksum += result[i] & 0xFF;
         }
 
-        if (checksum != (result[result.length - 1] & 0xFF)) {
+        if ((checksum & 0xFF) != (result[result.length - 1] & 0xFF)) {
             throw new IOException();
         }
 
@@ -148,7 +148,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         if (!_box.setLineLevel(D.COMS, D.SET_NULL)
                 || !_box.commboxDelay(25000)
                 || !_box.setLineLevel(D.SET_NULL, D.COMS)
-                || !_box.commboxDelay(25000)
+                || !_box.commboxDelay(26000)
                 || !_box.sendOutData(0, packEnter.length, packEnter)
                 || !_box.runReceive(D.REC_FR)
                 || !_box.endBatch()) {
@@ -160,12 +160,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
             throw new IOException();
         }
         packEnter = readOneFrame();
-
-        if (!_box.checkResult(55000)
-                || !_box.delBatch(_shared.buffID)
-                || !_box.setCommTime(D.SETWAITTIME, 55000)) {
-            throw new IOException();
-        }
+        _box.setCommTime(D.SETWAITTIME, 55000);
     }
 
     @Override
@@ -191,7 +186,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
             throw new IOException();
         }
 
-        if (!_box.sendOutData(0, 1, (byte)addrCode)
+        if (!_box.sendOutData(0, 1, (byte) addrCode)
                 || !_box.setCommLine((_recvLine == D.RK_NO) ? _sendLine : D.SK_NO, _recvLine)
                 || !_box.runReceive(_box.getD().SET55_BAUD)
                 || !_box.runReceive(D.REC_LEN_1)

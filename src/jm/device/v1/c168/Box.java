@@ -82,8 +82,7 @@ public final class Box extends jm.device.v1.Box {
     }
 
     protected int getBoxVer() {
-        return ((getShared().info.version[0] & 0xFF) << 8)
-                | (getShared().info.version[1] & 0xFF);
+        return ((getShared().info.version[0] & 0xFF) << 8) | (getShared().info.version[1] & 0xFF);
     }
 
     // ///////////////////////////////////////////////////////////////////////////
@@ -138,18 +137,18 @@ public final class Box extends jm.device.v1.Box {
     private boolean sendDataToECUNew(int commandWord, int offset, int count, byte... buff) {
         int i;
         byte[] command = new byte[count + 6];
-        command[0] = new Integer(getD().WR_DATA + getShared().info.headPassword).byteValue();
-        command[1] = new Integer(count + 3).byteValue();
+        command[0] = (byte)(getD().WR_DATA + getShared().info.headPassword);
+        command[1] = (byte)(count + 3);
         command[2] = getShared().buff.add[D.SWAPBLOCK];
-        command[3] = new Integer(D.SEND_CMD).byteValue();
-        command[4] = new Integer(count - 1).byteValue();
+        command[3] = (byte)(D.SEND_CMD);
+        command[4] = (byte)(count - 1);
         int checksum = getD().WR_DATA + command[1] & 0xFF + command[2] & 0xFF + command[3] & 0xFF + command[4] & 0xFF;
 
         for (i = 0; i < count; i++) {
             command[i + 5] = buff[i + offset];
             checksum += buff[i + offset] & 0xFF;
         }
-        command[i + 5] = new Integer(checksum).byteValue();
+        command[i + 5] = (byte)(checksum);
         for (i = 0; i < 3; i++) {
             try {
                 if (!checkIdle() || (getPort().write(command, 0, command.length) != command.length)) {
@@ -169,17 +168,17 @@ public final class Box extends jm.device.v1.Box {
 
     private boolean sendDataToECUOld(int commandWord, int offset, int count, byte... buff) {
         byte[] command = new byte[count + 5];
-        command[0] = new Integer(getD().WR_DATA + getShared().info.headPassword).byteValue();
-        command[1] = new Integer(count + 2).byteValue();
+        command[0] = (byte)(getD().WR_DATA + getShared().info.headPassword);
+        command[1] = (byte)(count + 2);
         command[2] = getShared().buff.add[D.SWAPBLOCK];
-        command[3] = new Integer(count - 1).byteValue();
+        command[3] = (byte)(count - 1);
         int checksum = getD().WR_DATA + command[1] & 0xFF + command[2] & 0xFF + command[3] & 0xFF;
         int i;
         for (i = 0; i < count; i++) {
             command[i + 4] = buff[i + offset];
             checksum += buff[i + offset] & 0xFF;
         }
-        command[i + 4] = new Integer(checksum).byteValue();
+        command[i + 4] = (byte)(checksum);
         for (i = 0; i < 3; i++) {
             try {
                 if (!checkIdle() || (getPort().write(command, 0, command.length) != command.length)) {
@@ -212,19 +211,18 @@ public final class Box extends jm.device.v1.Box {
             }
         }
         byte[] command = new byte[2 + count];
-        command[0] = new Integer(checksum + getShared().info.headPassword).byteValue();
+        command[0] = (byte)(checksum + getShared().info.headPassword);
         int i;
         for (i = 1; i <= count; i++) {
             command[i] = buff[i - 1];
             checksum += command[i] & 0xFF;
         }
-        command[i] = new Integer(checksum).byteValue();
+        command[i] = (byte)(checksum);
 
         for (i = 0; i < 3; i++) {
             if (commandWord != getD().STOP_REC && commandWord != getD().STOP_EXECUTE) {
                 try {
-                    if (!checkIdle()
-                            || (getPort().write(command, 0, command.length) != command.length)) {
+                    if (!checkIdle() || (getPort().write(command, 0, command.length) != command.length)) {
                         getShared().lastError = D.SENDDATA_ERROR;
                         continue;
                     }
@@ -375,8 +373,7 @@ public final class Box extends jm.device.v1.Box {
             }
             return 0;
         }
-        if ((readData(receiveBuffer, 0, cmdInfo[1] & 0xFF, 150000) != (cmdInfo[1] & 0xFF))
-                || (readData(cmdInfo, 0, 1, 150000) != 1)) {
+        if ((readData(receiveBuffer, 0, cmdInfo[1] & 0xFF, 150000) != (cmdInfo[1] & 0xFF)) || (readData(cmdInfo, 0, 1, 150000) != 1)) {
             return 0;
         }
         checksum += cmdInfo[1] & 0xFF;
@@ -422,8 +419,8 @@ public final class Box extends jm.device.v1.Box {
         temp[4] = 0x00;
         int i = 0;
         while (i < 4) {
-            temp[i] = new Integer(rand.nextInt() % 256).byteValue();
-            temp[4] = new Integer((temp[4] & 0xFF) + (temp[i] & 0xFF)).byteValue();
+            temp[i] = (byte)(rand.nextInt() % 256);
+            temp[4] = (byte)((temp[4] & 0xFF) + (temp[i] & 0xFF));
             i++;
         }
         try {
@@ -501,16 +498,16 @@ public final class Box extends jm.device.v1.Box {
         for (int i = 0; i < D.VERSIONLEN; i++) {
             getShared().info.version[i] = getShared().cmdTemp[pos++];
         }
-        getShared().info.port[0] = new Integer(D.NULLADD).byteValue();
-        getShared().info.port[1] = new Integer(D.NULLADD).byteValue();
-        getShared().info.port[2] = new Integer(D.NULLADD).byteValue();
+        getShared().info.port[0] = (byte)(D.NULLADD);
+        getShared().info.port[1] = (byte)(D.NULLADD);
+        getShared().info.port[2] = (byte)(D.NULLADD);
 
         getShared().buff.id = D.NULLADD;
         getShared().buff.usedNum = 0;
         for (int i = 0; i < D.MAXIM_BLOCK; i++) {
-            getShared().buff.add[i] = new Integer(D.NULLADD).byteValue();
+            getShared().buff.add[i] = (byte)(D.NULLADD);
         }
-        getShared().buff.add[D.LINKBLOCK] = new Integer(getShared().info.cmdBuffLen).byteValue();
+        getShared().buff.add[D.LINKBLOCK] = (byte)(getShared().info.cmdBuffLen);
         getShared().buff.add[D.SWAPBLOCK] = 0;
         return true;
     }
@@ -532,7 +529,7 @@ public final class Box extends jm.device.v1.Box {
     private boolean doSetPCBaud(SerialPort port, int baud) {
         try {
             getShared().lastError = 0;
-            if (!commboxDo(getD().SET_UPBAUD, 0, 1, new Integer(baud).byteValue())) {
+            if (!commboxDo(getD().SET_UPBAUD, 0, 1, (byte)(baud))) {
                 return false;
             }
             Thread.sleep(50);
@@ -554,7 +551,7 @@ public final class Box extends jm.device.v1.Box {
                 return false;
             }
             setRF(D.SETRFBAUD, baud);
-            if (!commboxDo(getD().SET_UPBAUD, 0, 1, new Integer(baud).byteValue())) {
+            if (!commboxDo(getD().SET_UPBAUD, 0, 1, (byte)(baud))) {
                 return false;
             }
             if (!checkResult(100000)) {
@@ -683,8 +680,8 @@ public final class Box extends jm.device.v1.Box {
         int header = getD().WR_DATA;
         int length = 0x01;
         if (buffID == D.LINKBLOCK) {
-            getShared().cmdTemp[2] = new Integer(0xFF).byteValue();
-            getShared().buff.add[D.LINKBLOCK] = new Integer(getShared().info.cmdBuffLen).byteValue();
+            getShared().cmdTemp[2] = (byte)(0xFF);
+            getShared().buff.add[D.LINKBLOCK] = (byte)(getShared().info.cmdBuffLen);
         } else {
             getShared().cmdTemp[2] = getShared().buff.add[D.SWAPBLOCK];
         }
@@ -693,10 +690,10 @@ public final class Box extends jm.device.v1.Box {
             getShared().lastError = D.BUFFFLOW;
             return false;
         }
-        getShared().cmdTemp[3] = new Integer(getD().WR_DATA + 0x01 + (getShared().cmdTemp[2] & 0xFF)).byteValue();
+        getShared().cmdTemp[3] = (byte)(getD().WR_DATA + 0x01 + (getShared().cmdTemp[2] & 0xFF));
         header += getShared().info.headPassword;
-        getShared().cmdTemp[0] = new Integer(header).byteValue();
-        getShared().cmdTemp[1] = new Integer(length).byteValue();
+        getShared().cmdTemp[0] = (byte)(header);
+        getShared().cmdTemp[1] = (byte)(length);
         getShared().buff.id = buffID;
         getShared().isDoNow = false;
         return true;
@@ -745,13 +742,13 @@ public final class Box extends jm.device.v1.Box {
                 // 是否合法命令?
                 if (commandWord == getD().SEND_DATA && getBoxVer() > 0x400) {
                     // 增加发送长命令
-                    cmdTemp[dataLength + 2] = new Integer(D.SEND_CMD).byteValue();
+                    cmdTemp[dataLength + 2] = (byte)(D.SEND_CMD);
                     checksum += D.SEND_CMD;
                     dataLength++;
-                    cmdTemp[dataLength + 2] = new Integer(commandWord + count).byteValue();
+                    cmdTemp[dataLength + 2] = (byte)(commandWord + count);
                     if (count > 0) {
                         int temp = cmdTemp[dataLength + 2] & 0xFF;
-                        cmdTemp[dataLength + 2] = new Integer(temp - 1).byteValue();
+                        cmdTemp[dataLength + 2] = (byte)(temp - 1);
                     }
                     checksum += cmdTemp[dataLength + 2] & 0xFF;
                     dataLength++;
@@ -759,14 +756,14 @@ public final class Box extends jm.device.v1.Box {
                         cmdTemp[dataLength + 2] = data[i];
                         checksum += data[i] & 0xFF;
                     }
-                    cmdTemp[1] = new Integer(dataLength).byteValue();
-                    cmdTemp[dataLength + 2] = new Integer(checksum + count + 2).byteValue();
+                    cmdTemp[1] = (byte)(dataLength);
+                    cmdTemp[dataLength + 2] = (byte)(checksum + count + 2);
                     getShared().nextAddress++;
                 } else {
-                    cmdTemp[dataLength + 2] = new Integer(commandWord + count).byteValue();
+                    cmdTemp[dataLength + 2] = (byte)(commandWord + count);
                     if (count > 0) {
                         int temp = cmdTemp[dataLength + 2];
-                        cmdTemp[dataLength + 2] = new Integer(temp - 1).byteValue();
+                        cmdTemp[dataLength + 2] = (byte)(temp - 1);
                     }
                     checksum += cmdTemp[dataLength + 2] & 0xFF;
                     dataLength++;
@@ -774,8 +771,8 @@ public final class Box extends jm.device.v1.Box {
                         cmdTemp[dataLength + 2] = data[i];
                         checksum += data[i] & 0xFF;
                     }
-                    cmdTemp[1] = new Integer(dataLength).byteValue();
-                    cmdTemp[dataLength + 2] = new Integer(checksum + count + 1).byteValue();
+                    cmdTemp[1] = (byte)(dataLength);
+                    cmdTemp[dataLength + 2] = (byte)(checksum + count + 1);
                     getShared().nextAddress++; // Ogilvy Xu add.
                 }
                 return true;
@@ -838,12 +835,12 @@ public final class Box extends jm.device.v1.Box {
         }
         Information info = getShared().info;
         if (buff.id == D.LINKBLOCK) {
-            buff.add[D.LINKBLOCK] = new Integer(info.cmdBuffLen - (cmdTemp[1] & 0xFF)).byteValue();
+            buff.add[D.LINKBLOCK] = (byte)(info.cmdBuffLen - (cmdTemp[1] & 0xFF));
         } else {
             buff.add[buff.id] = buff.add[D.SWAPBLOCK];
-            buff.used[buff.usedNum] = new Integer(buff.id).byteValue();
+            buff.used[buff.usedNum] = (byte)(buff.id);
             buff.usedNum++;
-            buff.add[D.SWAPBLOCK] = new Integer((buff.add[D.SWAPBLOCK] & 0xFF) + (cmdTemp[1] & 0xFF)).byteValue();
+            buff.add[D.SWAPBLOCK] = (byte)((buff.add[D.SWAPBLOCK] & 0xFF) + (cmdTemp[1] & 0xFF));
         }
         buff.id = D.NULLADD;
         return true;
@@ -877,7 +874,7 @@ public final class Box extends jm.device.v1.Box {
         }
 
         if (buffID == D.LINKBLOCK) {
-            getShared().buff.add[D.LINKBLOCK] = new Integer(getShared().info.cmdBuffLen).byteValue();
+            getShared().buff.add[D.LINKBLOCK] = (byte)(getShared().info.cmdBuffLen);
         } else {
             int i = 0;
             for (; i < getShared().buff.usedNum; i++) {
@@ -889,7 +886,7 @@ public final class Box extends jm.device.v1.Box {
             data[0] = getShared().buff.add[buffID];
             if (i < getShared().buff.usedNum - 1) {
                 data[1] = getShared().buff.add[getShared().buff.used[i + 1] & 0xFF];
-                data[2] = new Integer((getShared().buff.add[D.SWAPBLOCK] & 0xFF) - (data[1] & 0xFF)).byteValue();
+                data[2] = (byte)((getShared().buff.add[D.SWAPBLOCK] & 0xFF) - (data[1] & 0xFF));
                 if (!doSet(D.COPY_DATA - D.COPY_DATA % 4, 0, 3, data)) {
                     return false;
                 }
@@ -899,11 +896,11 @@ public final class Box extends jm.device.v1.Box {
             int deleteBuffLen = (data[1] & 0xFF) - (data[0] & 0xFF);
             for (i = i + 1; i < getShared().buff.usedNum; i++) {
                 getShared().buff.used[i - 1] = getShared().buff.used[i];
-                getShared().buff.add[getShared().buff.used[i] & 0xFF] = new Integer((getShared().buff.add[getShared().buff.used[i] & 0xFF] & 0xFF) - deleteBuffLen).byteValue();
+                getShared().buff.add[getShared().buff.used[i] & 0xFF] = (byte)((getShared().buff.add[getShared().buff.used[i] & 0xFF] & 0xFF) - deleteBuffLen);
             }
             getShared().buff.usedNum--;
-            getShared().buff.add[D.SWAPBLOCK] = new Integer((getShared().buff.add[D.SWAPBLOCK] & 0xFF) - deleteBuffLen).byteValue();
-            getShared().buff.add[buffID] = new Integer(D.NULLADD).byteValue();
+            getShared().buff.add[D.SWAPBLOCK] = (byte)((getShared().buff.add[D.SWAPBLOCK] & 0xFF) - deleteBuffLen);
+            getShared().buff.add[buffID] = (byte)(D.NULLADD);
         }
         return true;
     }
@@ -930,8 +927,8 @@ public final class Box extends jm.device.v1.Box {
     public boolean setLineLevel(int valueLow, int valueHigh) {
         // 只有一个字节的数据，设定端口1
         Information info = getShared().info;
-        info.port[1] = new Integer((info.port[1] & 0xFF) & ~valueLow).byteValue();
-        info.port[1] = new Integer((info.port[1] & 0xFF) | valueHigh).byteValue();
+        info.port[1] = (byte)((info.port[1] & 0xFF) & ~valueLow);
+        info.port[1] = (byte)((info.port[1] & 0xFF) | valueHigh);
         return sendToBox(D.SETPORT1, 0, 1, info.port[1]);
     }
 
@@ -949,8 +946,8 @@ public final class Box extends jm.device.v1.Box {
     public boolean setCommCtrl(int valueOpen, int valueClose) {
         // 只有一个字节的数据，设定端口2
         Information info = getShared().info;
-        info.port[2] = new Integer((info.port[2] & 0xFF) & ~valueOpen).byteValue();
-        info.port[2] = new Integer((info.port[2] & 0xFF) | valueClose).byteValue();
+        info.port[2] = (byte)((info.port[2] & 0xFF) & ~valueOpen);
+        info.port[2] = (byte)((info.port[2] & 0xFF) | valueClose);
         return sendToBox(D.SETPORT2, 0, 1, info.port[2]);
     }
 
@@ -973,7 +970,7 @@ public final class Box extends jm.device.v1.Box {
         if (recvLine > 7) {
             recvLine = 0x0F;
         }
-        getShared().info.port[0] = new Integer(sendLine + recvLine * 16).byteValue();
+        getShared().info.port[0] = (byte)(sendLine + recvLine * 16);
         return sendToBox(D.SETPORT0, 0, 1, getShared().info.port[0]);
     }
 
@@ -1079,7 +1076,7 @@ public final class Box extends jm.device.v1.Box {
     public boolean setCommLink(int ctrlWord1, int ctrlWord2, int ctrlWord3) {
         byte[] ctrlWord = new byte[3]; // 通讯控制字3
         int modeControl = ctrlWord1 & 0xE0;
-        ctrlWord[0] = new Integer(ctrlWord1).byteValue();
+        ctrlWord[0] = (byte)(ctrlWord1);
         int length = 3;
         if ((ctrlWord1 & 0x04) != 0) {
             getShared().isDb20 = true;
@@ -1089,8 +1086,8 @@ public final class Box extends jm.device.v1.Box {
         if (modeControl == D.SET_VPW || modeControl == D.SET_PWM) {
             return sendToBox(D.SETTING, 0, 1, ctrlWord[0]);
         } else {
-            ctrlWord[1] = new Integer(ctrlWord2).byteValue();
-            ctrlWord[2] = new Integer(ctrlWord3).byteValue();
+            ctrlWord[1] = (byte)(ctrlWord2);
+            ctrlWord[2] = (byte)(ctrlWord3);
             if (ctrlWord3 == 0) {
                 length--;
                 if (ctrlWord2 == 0) {
@@ -1126,8 +1123,8 @@ public final class Box extends jm.device.v1.Box {
             getShared().lastError = D.COMMBAUD_OUT;
             return false;
         }
-        baudTime[0] = new Integer(new Double(instructNum / 256).intValue()).byteValue();
-        baudTime[1] = new Integer(new Double(instructNum % 256).intValue()).byteValue();
+        baudTime[0] = (byte)(new Double(instructNum / 256).intValue());
+        baudTime[1] = (byte)(new Double(instructNum % 256).intValue());
         if (baudTime[0] == 0) {
             return sendToBox(D.SETBAUD, 0, 1, baudTime);
         } else {
@@ -1180,8 +1177,8 @@ public final class Box extends jm.device.v1.Box {
                 || type == D.SETRECBBOUT
                 || type == D.SETRECFROUT
                 || type == D.SETLINKTIME) {
-            timeBuff[0] = new Integer(time / 256).byteValue();
-            timeBuff[1] = new Integer(time % 256).byteValue();
+            timeBuff[0] = (byte)(time / 256);
+            timeBuff[1] = (byte)(time % 256);
             if (timeBuff[0] == 0) {
                 return sendToBox(type, 0, 1, timeBuff[1]);
             } else {
@@ -1283,7 +1280,7 @@ public final class Box extends jm.device.v1.Box {
         if (ret == -1) {
             return false;
         }
-        cmdTemp[0] = new Integer(ret).byteValue();
+        cmdTemp[0] = (byte)(ret);
 
         if ((type == D.INVERT_DATA) || (type == D.DEC_DATA) || (type == D.INC_DATA)) {
         } else if ((type == D.UPDATE_1BYTE) || (type == getD().SUB_BYTE)) {
@@ -1293,13 +1290,13 @@ public final class Box extends jm.device.v1.Box {
             if (ret == -1) {
                 return false;
             }
-            cmdTemp[1] = new Integer(ret).byteValue();
+            cmdTemp[1] = (byte)(ret);
         } else if ((type == D.COPY_DATA) || (type == D.ADD_1BYTE)) {
             ret = getAbsAdd(buffer[2] & 0xFF, buffer[3] & 0xFF);
             if (ret == -1) {
                 return false;
             }
-            cmdTemp[1] = new Integer(ret).byteValue();
+            cmdTemp[1] = (byte)(ret);
             cmdTemp[2] = buffer[4];
         } else if ((type == D.UPDATE_2BYTE) || (type == D.ADD_2BYTE)) {
             ret = getAbsAdd(buffer[3] & 0xFF, buffer[4] & 0xFF);
@@ -1307,7 +1304,7 @@ public final class Box extends jm.device.v1.Box {
                 return false;
             }
             cmdTemp[1] = buffer[2];
-            cmdTemp[2] = new Integer(ret).byteValue();
+            cmdTemp[2] = (byte)(ret);
             cmdTemp[3] = buffer[5];
 
         } else if ((type == D.ADD_DATA) || (type == D.SUB_DATA)) {
@@ -1315,12 +1312,12 @@ public final class Box extends jm.device.v1.Box {
             if (ret == -1) {
                 return false;
             }
-            cmdTemp[1] = new Integer(ret).byteValue();
+            cmdTemp[1] = (byte)(ret);
             ret = getAbsAdd(buffer[4], buffer[5] & 0xFF);
             if (ret == -1) {
                 return false;
             }
-            cmdTemp[2] = new Integer(ret).byteValue();
+            cmdTemp[2] = (byte)(ret);
 
         } else {
             getShared().lastError = D.UNDEFINE_CMD;
@@ -1364,8 +1361,8 @@ public final class Box extends jm.device.v1.Box {
                 delayWord = getD().DELAYTIME;
             }
         }
-        timeBuff[0] = new Integer(time / 256).byteValue();
-        timeBuff[1] = new Integer(time % 256).byteValue();
+        timeBuff[0] = (byte)(time / 256);
+        timeBuff[1] = (byte)(time % 256);
         if (timeBuff[0] == 0) {
             if (getShared().isDoNow) {
                 return commboxDo(delayWord, 0, 1, timeBuff[1]);
@@ -1433,7 +1430,7 @@ public final class Box extends jm.device.v1.Box {
         }
         byte[] temp = new byte[buffID.length];
         for (int i = 0; i < buffID.length; i++) {
-            temp[i] = new Integer(buffID[0]).byteValue();
+            temp[i] = (byte)(buffID[0]);
         }
         return commboxDo(commandWord, 0, buffID.length, temp);
     }
@@ -1457,7 +1454,7 @@ public final class Box extends jm.device.v1.Box {
                 times = 2;
             }
             byte[] temp = new byte[1];
-            temp[0] = new Integer(cmdInfo).byteValue();
+            temp[0] = (byte)(cmdInfo);
             Thread.sleep(6);
             while (times-- > 0) {
                 if (checkIdle() && (getPort().write(temp, 0, 1) == 1)) {

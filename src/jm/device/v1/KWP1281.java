@@ -98,7 +98,6 @@ class KWP1281 extends jm.device.KWP1281 implements IProtocol {
         if (_box.readBytes(buff, 1, length) <= 0) {
             throw new IOException();
         }
-        System.arraycopy(buff, 1, temp, 0, length);
         finishExecute(isFinish);
         return unpack(buff);
     }

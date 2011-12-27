@@ -101,6 +101,6 @@ final class Mikuni extends jm.device.Mikuni implements IProtocol {
         byte[] result = new byte[i];
         System.arraycopy(buff, 0, result, 0, i);
         finishExecute(isFinish);
-        return result;
+        return unpack(result);
     }
 }

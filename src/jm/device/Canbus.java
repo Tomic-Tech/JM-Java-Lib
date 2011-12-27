@@ -32,35 +32,27 @@ public abstract class Canbus implements IProtocol {
 
         if (_idMode.value() == CanbusIDMode.STD.value()) {
             target = new byte[3 + data.length];
-            target[1] = new Integer(_targetID >> 8).byteValue();
-            target[2] = new Integer(_targetID).byteValue();
+            target[1] = (byte)(_targetID >> 8);
+            target[2] = (byte)(_targetID);
             if (_frameType.value() == CanbusFrameType.Data.value()) {
-                target[0] = new Integer(data.length | CanbusIDMode.STD.value()
-                        | CanbusFrameType.Data.value()).byteValue();
+                target[0] = (byte)(data.length | CanbusIDMode.STD.value() | CanbusFrameType.Data.value());
             } else {
-                target[0] = new Integer(data.length | CanbusIDMode.STD.value()
-                        | CanbusFrameType.Remote.value()).byteValue();
+                target[0] = (byte)(data.length | CanbusIDMode.STD.value() | CanbusFrameType.Remote.value());
             }
-            for (int i = 0; i < data.length; ++i) {
-                target[i + 3] = data[i];
-            }
+            System.arraycopy(data, 0, target, 3, data.length);
             return target;
         } else if (_idMode.value() == CanbusIDMode.EXT.value()) {
             target = new byte[5 + data.length];
-            target[1] = new Integer(_targetID >> 24).byteValue();
-            target[2] = new Integer(_targetID >> 16).byteValue();
-            target[3] = new Integer(_targetID >> 8).byteValue();
-            target[4] = new Integer(_targetID).byteValue();
+            target[1] = (byte)(_targetID >> 24);
+            target[2] = (byte)(_targetID >> 16);
+            target[3] = (byte)(_targetID >> 8);
+            target[4] = (byte)(_targetID);
             if (_frameType.value() == CanbusFrameType.Data.value()) {
-                target[0] = new Integer(data.length | CanbusIDMode.EXT.value()
-                        | CanbusFrameType.Data.value()).byteValue();
+                target[0] = (byte)(data.length | CanbusIDMode.EXT.value() | CanbusFrameType.Data.value());
             } else {
-                target[0] = new Integer(data.length | CanbusIDMode.EXT.value()
-                        | CanbusFrameType.Remote.value()).byteValue();
+                target[0] = (byte)(data.length | CanbusIDMode.EXT.value() | CanbusFrameType.Remote.value());
             }
-            for (int i = 0; i < data.length; ++i) {
-                target[5 + i] = data[i];
-            }
+            System.arraycopy(data, 0, target, 5, data.length);
             return target;
         }
         throw new IllegalArgumentException();
@@ -74,17 +66,14 @@ public abstract class Canbus implements IProtocol {
             throw new IllegalArgumentException();
         }
 
-        int mode = (data[0] & 0xFF)
-                & (CanbusIDMode.EXT.value() | CanbusFrameType.Remote.value());
+        int mode = (data[0] & 0xFF) & (CanbusIDMode.EXT.value() | CanbusFrameType.Remote.value());
         if (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value())) {
             length = data[0] & 0x0F;
             if (length != data.length - 3) {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; i++) {
-                target[i] = data[3 + i];
-            }
+            System.arraycopy(data, 3, target, 0, length);
         } else if (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Remote.value())) {
             return target;
         } else if (mode == (CanbusIDMode.EXT.value() | CanbusFrameType.Data.value())) {
@@ -93,9 +82,7 @@ public abstract class Canbus implements IProtocol {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; i++) {
-                target[i] = data[5 + i];
-            }
+            System.arraycopy(data, 5, target, 0, length);
         } else {
             return target;
         }

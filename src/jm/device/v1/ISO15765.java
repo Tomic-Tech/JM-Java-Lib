@@ -80,7 +80,7 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
     public ISO15765(Box box, Shared shared) {
         _box = box;
         _shared = shared;
-        _default = new Default<ISO15765>(_box, _shared, this);
+        _default = new Default<>(_box, _shared, this);
     }
 
     public void prepare() throws IOException {
@@ -151,10 +151,8 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
 
         if (data.length < 8) {
             byte[] temp = new byte[8];
-            temp[0] = new Integer(data.length).byteValue();
-            for (int i = 0; i < data.length; i++) {
-                temp[i + 1] = data[i];
-            }
+            temp[0] = (byte)(data.length);
+            System.arraycopy(data, 0, temp, 1, data.length);
             _default.sendOneFrame(temp, true);
         } else {
             int frameCount = (data.length + 1) / 7;
@@ -168,8 +166,8 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
             for (; frameIndex < frameCount; ++frameIndex) {
                 if (0 == frameIndex) {
                     byte[] temp = new byte[8];
-                    temp[0] = new Integer(0x10 | (data.length >> 8)).byteValue();
-                    temp[1] = new Integer(data.length).byteValue();
+                    temp[0] = (byte)(0x10 | (data.length >> 8));
+                    temp[1] = (byte)(data.length);
                     System.arraycopy(data, pos, temp, 2, 6);
                     pos += 6;
                     _default.sendOneFrame(temp, true);
@@ -213,7 +211,7 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
             return firstFrame;
         }
 
-        ArrayList<Byte> result = new ArrayList<Byte>();
+        byte[] result = null;
         if ((firstFrame[0] & 0x10) == 0x10) {
             // Multi-frame
             int userDataCount;
@@ -228,9 +226,9 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
 
             userDataCount = ((firstFrame[0] & 0x0F) << 8) | (firstFrame[1] & 0xFF);
             restFrameCount = ((userDataCount - 6) / 7) + ((((userDataCount - 6) % 7) != 0) ? 1 : 0);
-            for (i = 2; i < firstFrame.length; ++i) {
-                result.add(firstFrame[i]);
-            }
+            result = new byte[userDataCount];
+            System.arraycopy(firstFrame, 2, result, 0, firstFrame.length - 2);
+            int pos = firstFrame.length - 2;
 
             if (_idMode.equals(CanbusIDMode.STD)) {
                 dataLength = STD_FRAMEID_LENGTH + 8;
@@ -249,24 +247,17 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
                 byte[] temp = new byte[dataLength];
                 System.arraycopy(restFrames, i * dataLength, temp, 0, dataLength);
                 unpackedBuff = unpack(temp);
-                for (byte b : unpackedBuff) {
-                    result.add(b);
-                }
+                System.arraycopy(unpackedBuff, 0, result, pos, unpackedBuff.length);
+                pos += unpackedBuff.length;
             }
         } else {
             while (firstFrame[1] == 0x7F && firstFrame[3] == 0x78) {
                 firstFrame = readOneFrame(false);
             }
             finishExecute(true);
-            for (int i = 1; i < firstFrame.length; i++) {
-                result.add(firstFrame[i]);
-            }
+            result = unpack(firstFrame);
         }
-        byte[] ret = new byte[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            ret[i] = result.get(i);
-        }
-        return ret;
+        return result;
     }
 
     @Override
@@ -313,15 +304,15 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         if (_box.readBytes(temp, 0, 3) <= 0) {
             return null;
         }
-        ArrayList<Byte> result = new ArrayList<Byte>();
+        
+        ArrayList<Byte> result = new ArrayList<>();
         for (int i = 0; i < temp.length; i++) {
             result.add(temp[i]);
         }
 
         int length = temp[0] & 0x0F;
         int mode = temp[0] & 0xC0;
-        if ((mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value()))
-                || (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Remote.value()))) {
+        if ((mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value())) || (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Remote.value()))) {
             length += STD_FRAMEID_LENGTH;
         } else {
             length += EXT_FRAMEID_LENGTH;
@@ -350,9 +341,9 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         byte[] buff = new byte[5];
         buff[0] = 0x20 | 2;
         buff[1] = 0x55;
-        buff[2] = new Integer(0xAA).byteValue();
-        buff[3] = new Integer(cmd).byteValue();
-        buff[4] = new Integer(inf).byteValue();
+        buff[2] = (byte)(0xAA);
+        buff[3] = (byte)(cmd);
+        buff[4] = (byte)(inf);
         if (sendCmd(buff)) {
             byte[] recv = readCmd();
             if (recv != null) {
@@ -388,53 +379,53 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         byte[] buff = new byte[6];
         buff[0] = 0x20 | 5;
         buff[1] = 0x55;
-        buff[2] = new Integer(0xAA).byteValue();
-        buff[3] = new Integer(SET_CANBAUD).byteValue();
+        buff[2] = (byte)(0xAA);
+        buff[3] = (byte)(SET_CANBAUD);
         if (baud.equals(CanbusBaud.B5K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[0]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[1]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[0]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[1]);
         } else if (baud.equals(CanbusBaud.B10K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[2]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[3]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[2]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[3]);
         } else if (baud.equals(CanbusBaud.B20K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[4]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[5]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[4]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[5]);
         } else if (baud.equals(CanbusBaud.B40K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[6]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[7]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[6]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[7]);
         } else if (baud.equals(CanbusBaud.B50K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[8]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[9]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[8]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[9]);
         } else if (baud.equals(CanbusBaud.B80K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[10]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[11]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[10]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[11]);
         } else if (baud.equals(CanbusBaud.B100K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[12]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[13]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[12]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[13]);
         } else if (baud.equals(CanbusBaud.B125K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[14]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[15]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[14]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[15]);
         } else if (baud.equals(CanbusBaud.B200K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[16]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[17]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[16]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[17]);
         } else if (baud.equals(CanbusBaud.B250K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[18]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[19]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[18]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[19]);
         } else if (baud.equals(CanbusBaud.B400K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[20]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[21]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[20]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[21]);
         } else if (baud.equals(CanbusBaud.B500K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[22]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[23]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[22]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[23]);
         } else if (baud.equals(CanbusBaud.B666K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[24]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[25]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[24]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[25]);
         } else if (baud.equals(CanbusBaud.B800K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[26]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[27]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[26]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[27]);
         } else if (baud.equals(CanbusBaud.B1000K)) {
-            buff[4] = new Integer(SJA_BTR_CODETABLE[28]).byteValue();
-            buff[5] = new Integer(SJA_BTR_CODETABLE[29]).byteValue();
+            buff[4] = (byte)(SJA_BTR_CODETABLE[28]);
+            buff[5] = (byte)(SJA_BTR_CODETABLE[29]);
         }
         if (sendCmd(buff)) {
             byte[] recv = readCmd();
@@ -451,13 +442,13 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
         byte[] buff = new byte[9];
         buff[0] = 0x20 | 6;
         buff[1] = 0x55;
-        buff[2] = new Integer(0xAA).byteValue();
-        buff[3] = new Integer(SET_CANACR).byteValue();
-        buff[4] = new Integer(acr).byteValue();
-        buff[5] = new Integer(acr0).byteValue();
-        buff[6] = new Integer(acr1).byteValue();
-        buff[7] = new Integer(acr2).byteValue();
-        buff[8] = new Integer(acr3).byteValue();
+        buff[2] = (byte)(0xAA);
+        buff[3] = (byte)(SET_CANACR);
+        buff[4] = (byte)(acr);
+        buff[5] = (byte)(acr0);
+        buff[6] = (byte)(acr1);
+        buff[7] = (byte)(acr2);
+        buff[8] = (byte)(acr3);
         if (sendCmd(buff)) {
             byte[] recv = readCmd();
             if (recv != null) {
@@ -474,13 +465,13 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
 
         buff[0] = 0x20 | 6;
         buff[1] = 0x55;
-        buff[2] = new Integer(0xAA).byteValue();
-        buff[3] = new Integer(SET_CANAMR).byteValue();
-        buff[4] = new Integer(amr).byteValue();
-        buff[5] = new Integer(amr0).byteValue();
-        buff[6] = new Integer(amr1).byteValue();
-        buff[7] = new Integer(amr2).byteValue();
-        buff[8] = new Integer(amr3).byteValue();
+        buff[2] = (byte)(0xAA);
+        buff[3] = (byte)(SET_CANAMR);
+        buff[4] = (byte)(amr);
+        buff[5] = (byte)(amr0);
+        buff[6] = (byte)(amr1);
+        buff[7] = (byte)(amr2);
+        buff[8] = (byte)(amr3);
 
         if (sendCmd(buff)) {
             byte[] recv = readCmd();
@@ -499,38 +490,29 @@ class ISO15765 extends jm.device.Canbus implements IProtocol {
             finishExecute(isFinish);
             throw new IOException();
         }
-        ArrayList<Byte> result = new ArrayList<Byte>();
-        for (byte b : temp) {
-            result.add(b);
-        }
 
         int length = temp[0] & 0x0F;
         int mode = temp[0] & (CanbusIDMode.EXT.value() | CanbusFrameType.Remote.value());
-        if ((mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value()))
-                || (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Remote.value()))) {
+        if ((mode == (CanbusIDMode.STD.value() | CanbusFrameType.Data.value())) || (mode == (CanbusIDMode.STD.value() | CanbusFrameType.Remote.value()))) {
             length += STD_FRAMEID_LENGTH;
         } else {
             length += EXT_FRAMEID_LENGTH;
         }
+        
+        byte[] result = new byte[length + 1];
+        System.arraycopy(temp, 0, result, 0, 3);
 
         length -= 2;
         if (length <= 0) {
             finishExecute(isFinish);
             return null;
         }
-        temp = new byte[length];
-        if (_box.readBytes(temp, 0, length) <= 0) {
+        
+        if (_box.readBytes(result, 3, length) <= 0) {
             finishExecute(isFinish);
             throw new IOException();
         }
-        for (byte b : temp) {
-            result.add(b);
-        }
         finishExecute(isFinish);
-        temp = new byte[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            temp[i] = result.get(i);
-        }
-        return unpack(temp);
+        return unpack(result);
     }
 }

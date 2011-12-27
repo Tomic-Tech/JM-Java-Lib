@@ -38,57 +38,42 @@ public abstract class KWP2000 extends KLineProtocol {
 
         byte[] target = null;
         if (_mode.compareTo(KWPMode.KWP8X) == 0) {
-            target = new byte[KWP8XHeaderLength + KWPChecksumLength
-                    + data.length];
-            target[0] = new Integer(0x80 | data.length).byteValue();
-            target[1] = new Integer(_targetAddress).byteValue();
-            target[2] = new Integer(_sourceAddress).byteValue();
-            for (int i = 0; i < data.length; ++i) {
-                target[KWP8XHeaderLength + i] = data[i];
-            }
+            target = new byte[KWP8XHeaderLength + KWPChecksumLength + data.length];
+            target[0] = (byte) (0x80 | data.length);
+            target[1] = (byte) (_targetAddress);
+            target[2] = (byte) (_sourceAddress);
+            System.arraycopy(data, 0, target, KWP8XHeaderLength, data.length);
         } else if (_mode.compareTo(KWPMode.KWPCX) == 0) {
-            target = new byte[KWPCXHeaderLength + KWPChecksumLength
-                    + data.length];
-            target[0] = new Integer(0xC0 | data.length).byteValue();
-            target[1] = new Integer(_targetAddress).byteValue();
-            target[2] = new Integer(_sourceAddress).byteValue();
-            for (int i = 0; i < data.length; ++i) {
-                target[KWPCXHeaderLength + i] = data[i];
-            }
+            target = new byte[KWPCXHeaderLength + KWPChecksumLength + data.length];
+            target[0] = (byte) (0xC0 | data.length);
+            target[1] = (byte) (_targetAddress);
+            target[2] = (byte) (_sourceAddress);
+            System.arraycopy(data, 0, target, KWPCXHeaderLength, data.length);
         } else if (_mode.compareTo(KWPMode.KWP80) == 0) {
-            target = new byte[KWP80HeaderLength + KWPChecksumLength
-                    + data.length];
-            target[0] = new Integer(0x80).byteValue();
-            target[1] = new Integer(_targetAddress).byteValue();
-            target[2] = new Integer(_sourceAddress).byteValue();
-            target[3] = new Integer(data.length).byteValue();
-            for (int i = 0; i < data.length; ++i) {
-                target[KWP80HeaderLength + i] = data[i];
-            }
+            target = new byte[KWP80HeaderLength + KWPChecksumLength + data.length];
+            target[0] = (byte) (0x80);
+            target[1] = (byte) (_targetAddress);
+            target[2] = (byte) (_sourceAddress);
+            target[3] = (byte) (data.length);
+            System.arraycopy(data, 0, target, KWP80HeaderLength, data.length);
         } else if (_mode.compareTo(KWPMode.KWP00) == 0) {
-            target = new byte[KWP00HeaderLength + KWPChecksumLength
-                    + data.length];
+            target = new byte[KWP00HeaderLength + KWPChecksumLength + data.length];
             target[0] = 0x00;
-            target[1] = new Integer(data.length).byteValue();
-            for (int i = 0; i < data.length; ++i) {
-                target[KWP00HeaderLength + i] = data[i];
-            }
+            target[1] = (byte) (data.length);
+            System.arraycopy(data, 0, target, KWP00HeaderLength, data.length);
         } else if (_mode.compareTo(KWPMode.KWPXX) == 0) {
-            target = new byte[KWPXXHeaderLength + KWPChecksumLength
-                    + data.length];
-            target[0] = new Integer(data.length).byteValue();
-            for (int i = 0; i < data.length; ++i) {
-                target[KWPXXHeaderLength + i] = data[i];
-            }
+            target = new byte[KWPXXHeaderLength + KWPChecksumLength + data.length];
+            target[0] = (byte) (data.length);
+            System.arraycopy(data, 0, target, KWPXXHeaderLength, data.length);
         } else {
             return target;
         }
-
-        target[target.length - 1] = 0;
+        
+        int checksum = 0;
         for (int i = 0; i < target.length - 1; ++i) {
-            target[target.length - 1] = new Integer(target[target.length - 1]
-                    + target[i]).byteValue();
+            checksum += target[i] & 0xFF;
         }
+        target[target.length - 1] = (byte)checksum;
         return target;
     }
 
@@ -108,9 +93,7 @@ public abstract class KWP2000 extends KLineProtocol {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; ++i) {
-                target[i] = data[KWP8XHeaderLength + i];
-            }
+            System.arraycopy(data, KWP8XHeaderLength, target, 0, length);
         } else if ((data[0] & 0xFF) == 0x80) {
             length = data[3] & 0xFF;
             if ((data[1] & 0xFF) != _sourceAddress) {
@@ -120,27 +103,21 @@ public abstract class KWP2000 extends KLineProtocol {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; ++i) {
-                target[i] = data[KWP80HeaderLength + i];
-            }
+            System.arraycopy(data, KWP80HeaderLength, target, 0, length);
         } else if ((data[0] & 0xFF) == 0) {
             length = data[0] & 0xFF;
             if (length != (data.length - KWP00HeaderLength - KWPChecksumLength)) {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; ++i) {
-                target[i] = data[KWP00HeaderLength + i];
-            }
+            System.arraycopy(data, KWP00HeaderLength, target, 0, length);
         } else {
             length = data[0] & 0xFF;
             if (length != (data.length - KWPXXHeaderLength - KWPChecksumLength)) {
                 throw new IllegalArgumentException();
             }
             target = new byte[length];
-            for (int i = 0; i < length; ++i) {
-                target[i] = data[KWPXXHeaderLength + i];
-            }
+            System.arraycopy(data, KWPXXHeaderLength, target, 0, length);
         }
         return target;
     }

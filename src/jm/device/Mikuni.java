@@ -11,10 +11,8 @@ public abstract class Mikuni extends KLineProtocol {
         }
 
         byte[] target = new byte[data.length + 3];
-        target[0] = new Integer(HeadFormat).byteValue();
-        for (int i = 0; i < data.length; ++i) {
-            target[i + 1] = data[i];
-        }
+        target[0] = (byte)(HeadFormat);
+        System.arraycopy(data, 0, target, 1, data.length);
         target[target.length - 2] = 0x0D;
         target[target.length - 1] = 0x0A;
         return target;
@@ -26,9 +24,7 @@ public abstract class Mikuni extends KLineProtocol {
             throw new IllegalArgumentException();
         }
         byte[] target = new byte[data.length - 3];
-        for (int i = 1; i < data.length - 2; ++i) {
-            target[i - 1] = data[i];
-        }
+        System.arraycopy(data, 1, target, 0, data.length - 2);
         return target;
     }
 }

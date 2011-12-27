@@ -12,11 +12,9 @@ public abstract class KWP1281 extends KLineProtocol {
         }
 
         byte[] ret = new byte[3 + data.length];
-        ret[0] = new Integer(data.length + 20).byteValue();
+        ret[0] = (byte)(data.length + 20);
         ret[1] = frameCounterIncrement();
-        for (int i = 0; i < data.length; ++i) {
-            ret[i + 2] = data[i];
-        }
+        System.arraycopy(data, 0, ret, 2, data.length);
         ret[data.length + 2] = FrameEnd;
         return ret;
     }
@@ -28,14 +26,12 @@ public abstract class KWP1281 extends KLineProtocol {
         }
 
         byte[] ret = new byte[data.length - 2];
-        for (int i = 0; i < data.length - 2; ++i) {
-            ret[i] = data[i + 1];
-        }
+        System.arraycopy(data, 1, ret, 0, data.length - 2);
         return ret;
     }
 
     protected byte frameCounterIncrement() {
         _frameCounter = (_frameCounter + 1) & 0xFF;
-        return new Integer(_frameCounter).byteValue();
+        return (byte)(_frameCounter);
     }
 }
