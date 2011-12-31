@@ -10,10 +10,10 @@ public final class SerialPort implements IPort {
 
     public enum Parity {
 
-        None(0), 
-        Odd(1), 
-        Even(2), 
-        Mark(3), 
+        None(0),
+        Odd(1),
+        Even(2),
+        Mark(3),
         Space(4);
         private int _value;
 
@@ -28,8 +28,8 @@ public final class SerialPort implements IPort {
 
     public enum Stopbits {
 
-        One(0), 
-        OnePointFive(1), 
+        One(0),
+        OnePointFive(1),
         Two(2);
         private int _value;
 
@@ -44,8 +44,8 @@ public final class SerialPort implements IPort {
 
     public enum FlowControl {
 
-        None(0), 
-        Hardware(1), 
+        None(0),
+        Hardware(1),
         Software(2);
         private int _value;
 
@@ -329,6 +329,11 @@ public final class SerialPort implements IPort {
         if (ret != count) {
             throw new IOException();
         }
+        System.out.printf("recv: ");
+        for (int i = offset; i < offset + count; i++) {
+            System.out.printf("%02X ", buff[i]);
+        }
+        System.out.printf("\n");
         return ret;
     }
 
@@ -365,11 +370,16 @@ public final class SerialPort implements IPort {
     private static native int nativeWrite(long handle, byte[] data, int offset, int count);
 
     @Override
-    public int write(byte[] data, int offset, int count) throws IOException {
-        int ret = nativeWrite(_handle, data, offset, count);
+    public int write(byte[] buff, int offset, int count) throws IOException {
+        int ret = nativeWrite(_handle, buff, offset, count);
         if (ret != count) {
             throw new IOException();
         }
+        System.out.printf("send: ");
+        for (int i = offset; i < (offset + count); i++) {
+            System.out.printf("%02X ", buff[i]);
+        }
+        System.out.printf("\n");
         return ret;
     }
 
