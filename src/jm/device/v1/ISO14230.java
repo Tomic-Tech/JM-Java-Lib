@@ -148,7 +148,7 @@ class ISO14230 extends jm.device.KWP2000 implements IProtocol {
         if (!_box.setLineLevel(D.COMS, D.SET_NULL)
                 || !_box.commboxDelay(25000)
                 || !_box.setLineLevel(D.SET_NULL, D.COMS)
-                || !_box.commboxDelay(26000)
+                || !_box.commboxDelay(25000)
                 || !_box.sendOutData(0, packEnter.length, packEnter)
                 || !_box.runReceive(D.REC_FR)
                 || !_box.endBatch()) {

@@ -214,7 +214,7 @@ public final class Box extends jm.device.v1.Box {
         command[0] = (byte)(checksum + getShared().info.headPassword);
         int i;
         for (i = 1; i <= count; i++) {
-            command[i] = buff[i - 1];
+            command[i] = buff[i + offset - 1];
             checksum += command[i] & 0xFF;
         }
         command[i] = (byte)(checksum);
@@ -1126,7 +1126,7 @@ public final class Box extends jm.device.v1.Box {
         baudTime[0] = (byte)(new Double(instructNum / 256).intValue());
         baudTime[1] = (byte)(new Double(instructNum % 256).intValue());
         if (baudTime[0] == 0) {
-            return sendToBox(D.SETBAUD, 0, 1, baudTime);
+            return sendToBox(D.SETBAUD, 1, 1, baudTime);
         } else {
             return sendToBox(D.SETBAUD, 0, 2, baudTime);
         }
